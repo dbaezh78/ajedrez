@@ -1,25 +1,28 @@
 /* ======================================= */
 /* ESTILOS BASE (Móvil Primero, 384px) */
 /* ======================================= */
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
     background-color: #f4f4f4;
-    width: max-content;
     margin: 0;
     padding: 10px;
-    box-sizing: border-box;
+    min-height: 100vh;
 }
 
-@media (min-width: 384px){
-    body {margin: 0% 0% 0% 0%}
+@media (min-width: 384px) {
+    body { margin: 0; }
 }
-@media (min-width: 768px){
-    body {margin: 1% 0% 0% 5%;}
+@media (min-width: 768px) {
+    body { margin: 1% 0 0 5%; }
 }
 
-/* El tablero y el panel se apilan en móvil */
+/* Contenedor principal del juego */
 #game-container {
     display: flex;
     flex-direction: column;
@@ -46,7 +49,6 @@ body {
     height: 384px;
     border: 3px solid #333;
     margin: 0;
-    box-shadow: none;
 }
 
 .square {
@@ -63,16 +65,42 @@ body {
 
 .light { background-color: #f0d9b5; }
 .dark { background-color: #b58863; }
-.piece { line-height: 1; }
+
 .selected {
     outline: 3px solid rgba(0, 0, 255, 0.7);
     box-shadow: inset 0 0 8px rgba(0, 0, 255, 0.9);
 }
 
+.piece {
+    font-size: 40px;
+    cursor: pointer;
+    user-select: none;
+    display: block;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 5px 1px 4px rgb(255, 255, 255);
+}
+
+/* Piezas blancas */
+.square .piece.white {
+    color: white;
+}
+
+.piece-white {
+    color: white !important;
+    text-shadow: 5px 1px 4px rgb(0, 0, 0);
+}
+
+/* Piezas negras */
+.piece-black {
+    color: #222 !important;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6);
+}
+
 /* Panel de Información Base (Celular) */
 #info-panel {
-    width: 94%;
-    padding: 10px;
+    width: 100%;
+    padding: 15px;
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -103,8 +131,7 @@ body {
     border: 1px solid #ddd;
     padding: 5px;
     border-radius: 4px;
-    /* Mantener el scroll siempre arriba */
-    direction: rtl;
+    direction: rtl; /* Scroll siempre arriba */
 }
 
 .move-entry {
@@ -150,7 +177,7 @@ body {
     border-radius: 5px;
     padding: 10px 15px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
 }
 
 #start-button:hover:not(:disabled) {
@@ -168,7 +195,7 @@ body {
 }
 
 #start-button:disabled {
-    cursor: default;
+    cursor: not-allowed;
     border-color: #ccc;
 }
 
@@ -180,14 +207,17 @@ body {
     background: none;
     border: 2px solid #ff6b6b;
     border-radius: 5px;
-    padding: 7px 7px;
+    padding: 10px;
     cursor: pointer;
     width: 80px;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
     font-size: 1.4em;
     font-weight: bold;
     color: #ff6b6b;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #undo-button:hover:not(:disabled) {
@@ -196,14 +226,14 @@ body {
 }
 
 #undo-button:disabled {
-    cursor: default;
+    cursor: not-allowed;
     border-color: #ccc;
     color: #aaa;
 }
 
 #timer-container {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: 10px;
     width: 100%;
 }
@@ -213,28 +243,25 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 8px;
+    padding: 12px;
     border-radius: 5px;
     transition: background-color 0.3s;
 }
 
 .player-control.white {
     background-color: white;
-    border: 1px solid black;
+    border: 1px solid #333;
 }
 .player-control.black {
-    background-color: black;
+    background-color: #333;
     color: white;
+    border: 1px solid #333;
 }
 
 .timer-display {
     font-size: 1.8em;
     font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.player-control.black .timer-display {
-    color: white;
+    margin-bottom: 8px;
 }
 
 .player-control button {
@@ -246,6 +273,7 @@ body {
     width: 100%;
     background-color: #ccc;
     color: #666;
+    transition: background-color 0.3s;
 }
 
 .player-control button:not(:disabled) {
@@ -255,6 +283,10 @@ body {
 
 .player-control button:not(:disabled):hover {
     background-color: #27ae60;
+}
+
+.player-control button:disabled {
+    cursor: not-allowed;
 }
 
 /* ======================================= */
@@ -268,7 +300,7 @@ body {
     user-select: none;
     pointer-events: none;
     display: flex;
-    z-index: 2; /* Asegurar que estén por encima del tablero */
+    z-index: 2;
 }
 
 /* Coordenadas Laterales (Números 1-8) */
@@ -280,7 +312,6 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 15px 0;
-    background-color: transparent;
 }
 
 .rank-label {
@@ -290,7 +321,6 @@ body {
     justify-content: center;
     font-size: 16px;
     font-weight: bold;
-    background-color: transparent;
 }
 
 /* Coordenadas Inferiores (Letras A-H) */
@@ -300,7 +330,6 @@ body {
     width: 100%;
     justify-content: space-between;
     padding: 0 15px;
-    background-color: transparent;
 }
 
 .file-label {
@@ -310,7 +339,6 @@ body {
     justify-content: center;
     font-size: 16px;
     font-weight: bold;
-    background-color: transparent;
 }
 
 /* ======================================= */
@@ -370,7 +398,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
 }
 
 .promotion-option:hover {
@@ -463,6 +490,7 @@ body {
         flex-direction: row;
         gap: 25px;
         max-width: none;
+        align-items: flex-start;
     }
 
     /* Tablero para Tablet */
@@ -471,20 +499,20 @@ body {
     }
     
     #chessboard {
-        width: 600px;
-        height: 600px;
+        width: 500px;
+        height: 500px;
         border: 5px solid #333;
     }
 
-    .square { font-size: 50px; }
+    .piece { font-size: 50px; }
     
     #info-panel {
-        width: 300px;
+        width: 280px;
         flex-shrink: 0;
         margin-top: 0;
     }
 
-    #moves-list { max-height: 400px; }
+    #moves-list { max-height: 350px; }
     
     /* Coordenadas para Tablet */
     .rank-label, .file-label {
@@ -499,12 +527,16 @@ body {
 /* MEDIA QUERY: PC/DESKTOP (> 992px) */
 /* ======================================= */
 @media (min-width: 992px) {
-    #info-panel h1 { font-size: 1.5em;color: #2e8fcc; }
+    #info-panel h1 { 
+        font-size: 1.8em;
+        color: #2e8fcc; 
+    }
     
     #game-container {
         flex-direction: row;
         gap: 30px;
         max-width: none;
+        align-items: flex-start;
     }
     
     /* Tablero para PC */
@@ -513,19 +545,19 @@ body {
     }
     
     #chessboard {
-        width: 700px;
-        height: 700px;
+        width: 600px;
+        height: 600px;
         border: 5px solid #333;
     }
 
-    .square { font-size: 55px; }
+    .piece { font-size: 55px; }
 
     #info-panel { 
-        width: 236px; 
+        width: 280px; 
         flex-shrink: 0; 
     }
     
-    #moves-list { max-height: 450px; }
+    #moves-list { max-height: 400px; }
     
     /* Coordenadas para PC */
     .rank-label, .file-label {
@@ -537,4 +569,57 @@ body {
     
     /* Ajuste de tamaño de fuente del timer */
     .timer-display { font-size: 2.2em; }
+}
+
+/* ======================================= */
+/* MEJORAS DE ACCESIBILIDAD Y EXPERIENCIA */
+/* ======================================= */
+
+/* Focus visible para accesibilidad */
+button:focus-visible {
+    outline: 2px solid #2dacde;
+    outline-offset: 2px;
+}
+
+/* Mejora de scrollbar para navegadores webkit */
+#moves-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#moves-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#moves-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#moves-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Estados de hover mejorados */
+.square:hover {
+    filter: brightness(1.1);
+}
+
+/* Responsive para pantallas muy pequeñas */
+@media (max-width: 383px) {
+    #chessboard {
+        width: 350px;
+        height: 350px;
+    }
+    
+    .piece {
+        font-size: 35px;
+    }
+    
+    #ranks { left: -20px; }
+    #files { bottom: -20px; }
+    
+    .rank-label, .file-label {
+        font-size: 14px;
+    }
 }
