@@ -13,6 +13,10 @@ body {
     margin: 0;
     padding: 10px;
     min-height: 100vh;
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 @media (min-width: 384px) {
