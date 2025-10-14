@@ -545,8 +545,8 @@ body {
     }
     
     #chessboard {
-        width: 600px;
-        height: 600px;
+        width: 728px;
+        height: 728px;
         border: 5px solid #333;
     }
 
@@ -621,5 +621,30 @@ button:focus-visible {
     
     .rank-label, .file-label {
         font-size: 14px;
+    }
+}
+/* Estilos para el arrastrar y soltar */
+.square {
+    transition: background-color 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.square:active {
+    cursor: grabbing;
+}
+
+#dragging-piece {
+    pointer-events: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Mejorar la experiencia táctil */
+@media (hover: none) and (pointer: coarse) {
+    .square {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
     }
 }
