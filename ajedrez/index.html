@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="src/ico.ico" type="image/x-icon">
+    <title>Juego de Ajedrez JS Avanzado</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div id="game-container"> 
+        
+        <div id="board-wrapper">
+            <div id="chessboard">
+                <!-- El tablero se genera con JavaScript -->
+            </div>
+            
+            <div id="ranks">
+                <!-- Las coordenadas numéricas se generan con JavaScript -->
+            </div>
+            
+            <div id="files">
+                <!-- Las coordenadas de letras se generan con JavaScript -->
+            </div>
+        </div>
+        
+        <div id="info-panel">
+            <h1>Juego de Ajedrez</h1>
+    
+            <div id="start-block">
+                
+                <div id="button-container">
+                    <button id="undo-button" disabled>↶ Volver</button>
+                    <button id="start-button">
+                        <h2>Iniciar Partida ⏱️</h2>
+                    </button>
+                </div>
+                
+                <div id="timer-container">
+                    <div class="player-control white">
+                        <div id="white-timer-display" class="timer-display">10:00</div>
+                        <button id="white-button" disabled>Pausar Blancas</button>
+                    </div>
+                    
+                    <div class="player-control black">
+                        <div id="black-timer-display" class="timer-display">10:00</div>
+                        <button id="black-button" disabled>Pausar Negras</button>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <hr>
+            
+            <h2 id="turn-display">Turno: Blancas</h2>
+            
+            <hr>
+
+            <h2>Registro Jugadas📜</h2>
+            <div id="moves-list">
+                <!-- Las jugadas se mostrarán aquí -->
+                 <button onclick="window.location.href='../index.html'">Volver al Menú</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para coronación de peón -->
+    <div id="promotion-modal" class="modal">
+        <div class="modal-content">
+            <h3>Coronar Peón</h3>
+            <p>Elige una pieza para coronar tu peón:</p>
+            <div class="promotion-options">
+                <button class="promotion-option" data-piece="Q">♕ Reina</button>
+                <button class="promotion-option" data-piece="R">♖ Torre</button>
+                <button class="promotion-option" data-piece="B">♗ Alfil</button>
+                <button class="promotion-option" data-piece="N">♘ Caballo</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="src/script.js"></script>
+</body>
+</html>

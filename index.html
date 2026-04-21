@@ -2,81 +2,63 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="src/ico.ico" type="image/x-icon">
-    <title>Juego de Ajedrez JS Avanzado</title>
-    <link rel="stylesheet" href="src/style.css">
+    <title>Menu Principal - Ajedrez</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #2c3e50; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            color: white;
+        }
+        h1 { margin-bottom: 40px; font-weight: 300; }
+        .menu-container { display: flex; gap: 30px; }
+        
+        .btn { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 250px; 
+            height: 250px; 
+            background: white; 
+            color: #333; 
+            text-decoration: none; 
+            border-radius: 20px; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .btn:hover { 
+            transform: translateY(-10px); 
+            background-color: #ecf0f1; 
+            box-shadow: 0 15px 25px rgba(0,0,0,0.4);
+        }
+        
+        .icon { font-size: 80px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
-    <div id="game-container"> 
-        
-        <div id="board-wrapper">
-            <div id="chessboard">
-                <!-- El tablero se genera con JavaScript -->
-            </div>
-            
-            <div id="ranks">
-                <!-- Las coordenadas numéricas se generan con JavaScript -->
-            </div>
-            
-            <div id="files">
-                <!-- Las coordenadas de letras se generan con JavaScript -->
-            </div>
-        </div>
-        
-        <div id="info-panel">
-            <h1>Juego de Ajedrez</h1>
-    
-            <div id="start-block">
-                
-                <div id="button-container">
-                    <button id="undo-button" disabled>↶ Volver</button>
-                    <button id="start-button">
-                        <h2>Iniciar Partida ⏱️</h2>
-                    </button>
-                </div>
-                
-                <div id="timer-container">
-                    <div class="player-control white">
-                        <div id="white-timer-display" class="timer-display">10:00</div>
-                        <button id="white-button" disabled>Pausar Blancas</button>
-                    </div>
-                    
-                    <div class="player-control black">
-                        <div id="black-timer-display" class="timer-display">10:00</div>
-                        <button id="black-button" disabled>Pausar Negras</button>
-                    </div>
-                </div>
-                
-            </div>
-            
-            <hr>
-            
-            <h2 id="turn-display">Turno: Blancas</h2>
-            
-            <hr>
 
-            <h2>Registro Jugadas📜</h2>
-            <div id="moves-list">
-                <!-- Las jugadas se mostrarán aquí -->
-            </div>
-        </div>
+    <h1>Bienvenido, David</h1>
+
+    <div class="menu-container">
+        <a href="ajedrez" class="btn">
+            <span class="icon">♞</span>
+            Juego de Ajedrez
+        </a>
+
+        <a href="apuntes/" class="btn">
+            <span class="icon">📝</span>
+            Apuntes de Ajedrez
+        </a>
     </div>
 
-    <!-- Modal para coronación de peón -->
-    <div id="promotion-modal" class="modal">
-        <div class="modal-content">
-            <h3>Coronar Peón</h3>
-            <p>Elige una pieza para coronar tu peón:</p>
-            <div class="promotion-options">
-                <button class="promotion-option" data-piece="Q">♕ Reina</button>
-                <button class="promotion-option" data-piece="R">♖ Torre</button>
-                <button class="promotion-option" data-piece="B">♗ Alfil</button>
-                <button class="promotion-option" data-piece="N">♘ Caballo</button>
-            </div>
-        </div>
-    </div>
-    
-    <script src="src/script.js"></script>
 </body>
 </html>

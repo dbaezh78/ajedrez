@@ -1,0 +1,8 @@
+Reporte de Partida: Jugada1_Areyna_15
+
+Apuntes:
+ e4
+1. e5
+
+PGN:
+1. e4 e5

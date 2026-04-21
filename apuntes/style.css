@@ -1,0 +1,5 @@
+body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+.container { display: flex; gap: 20px; align-items: flex-start; }
+.controls { display: flex; flex-direction: column; gap: 10px; }
+#notes { width: 300px; height: 300px; padding: 10px; }
+button { padding: 10px; cursor: pointer; background: #007bff; color: white; border: none; }

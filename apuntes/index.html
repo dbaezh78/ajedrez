@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajedrez Pro - David</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f4f4; padding: 20px; }
+        .game-container { display: flex; gap: 20px; }
+        .board-wrapper { display: grid; grid-template-columns: 30px 800px; grid-template-rows: 800px 30px; }
+        #board { display: grid; grid-template-columns: repeat(8, 100px); grid-template-rows: repeat(8, 100px); border: 5px solid #333; position: relative; }
+        .square { width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; font-size: 60px; cursor: pointer; }
+        .white { background-color: #f0d9b5; }
+        .black { background-color: #b58863; }
+        .ranks { display: flex; flex-direction: column; justify-content: space-around; align-items: center; font-weight: bold; color: #555; }
+        .files { display: grid; grid-template-columns: repeat(8, 100px); justify-items: center; align-items: center; font-weight: bold; color: #555; margin-left: 30px; }
+        .selected { background-color: #88cc88 !important; }
+        .last-move { background-color: rgba(255, 255, 0, 0.4) !important; }
+        
+        .controls { width: 300px; display: flex; flex-direction: column; gap: 10px; }
+        textarea { height: 200px; padding: 10px; }
+        .btn-group { display: flex; gap: 5px; }
+        button { padding: 10px; cursor: pointer; flex: 1; border: none; font-weight: bold; }
+        #finishBtn { background-color: #e67e22; color: white; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <h2 id="playerNameDisplay">Partida de: </h2>
+    
+    <div class="game-container">
+        <div class="board-wrapper">
+            <div class="ranks"><div>8</div><div>7</div><div>6</div><div>5</div><div>4</div><div>3</div><div>2</div><div>1</div></div>
+            <div id="board">
+                <svg id="arrowLayer" style="position: absolute; top:0; left:0; width:800px; height:800px; pointer-events: none;">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="white" fill-opacity="0.6" />
+                        </marker>
+                    </defs>
+                    <line id="arrowLine" x1="0" y1="0" x2="0" y2="0" stroke="white" stroke-width="6" opacity="0.6" marker-end="url(#arrowhead)"/>
+                </svg>
+            </div>
+            <div style="grid-column: 2;"></div>
+            <div class="files"><div>a</div><div>b</div><div>c</div><div>d</div><div>e</div><div>f</div><div>g</div><div>h</div></div>
+        </div>
+
+        <div class="controls">
+            <div class="btn-group">
+                <button onclick="undoMove()">⟵ Atrás</button>
+                <button onclick="redoMove()">Adelante ⟶</button>
+            </div>
+            <textarea id="notes" placeholder="Tus apuntes..."></textarea>
+            
+            <button id="finishBtn" onclick="finishGame()">Terminar y Guardar Todo</button>
+            
+            <button onclick="window.location.href='../index.html'" 
+                    style="background-color: #7f8c8d; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%;">
+                Volver al Menú
+            </button>
+        </div>
+    </div>
+
+<script>
+    let game = new Chess();
+    let moveImages = []; // Array para guardar los Blobs de las imágenes
+    let lastMove = { from: null, to: null };
+    let selectedSquare = null;
+    let playerName = "";
+    
+    const pieces = {
+        'w': { 'k': '♔', 'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘', 'p': '♙' },
+        'b': { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' }
+    };
+
+    window.onload = async () => {
+        playerName = prompt("Introduce tu nombre:", "Jugador");
+        document.getElementById('playerNameDisplay').innerText = "Partida de: " + playerName;
+        if(!localStorage.getItem('chessCounter')) localStorage.setItem('chessCounter', 1);
+        
+        // Capturar estado inicial
+        moveImages.push(await captureBoardState());
+        renderBoard();
+    };
+
+    // Función que captura el tablero como Blob
+    async function captureBoardState() {
+        const canvas = await html2canvas(document.querySelector('.board-wrapper'));
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    async function finishGame() {
+        if (!window.showDirectoryPicker) {
+            alert("Navegador no compatible.");
+            return;
+        }
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            const count = localStorage.getItem('chessCounter');
+            const name = `${playerName}_${count}`;
+            const folderHandle = await dirHandle.getDirectoryHandle(name, {create: true});
+            
+            // 1. Guardar TXT
+            const txtHandle = await folderHandle.getFileHandle(`${name}.txt`, {create: true});
+            const writableTxt = await txtHandle.createWritable();
+            await writableTxt.write(`Reporte: ${name}\n\nApuntes:\n${document.getElementById('notes').value}\n\nPGN:\n${game.pgn()}`);
+            await writableTxt.close();
+            
+            // 2. Guardar todas las imágenes del array
+            for(let i = 0; i < moveImages.length; i++) {
+                const imgHandle = await folderHandle.getFileHandle(`movimiento_${i}.png`, {create: true});
+                const writableImg = await imgHandle.createWritable();
+                await writableImg.write(moveImages[i]);
+                await writableImg.close();
+            }
+
+            localStorage.setItem('chessCounter', parseInt(count) + 1);
+            alert("¡Guardado exitosamente! Se guardaron " + moveImages.length + " imágenes.");
+        } catch (err) { console.error(err); alert("Error al guardar."); }
+    }
+
+    function renderBoard() {
+        const boardEl = document.getElementById('board');
+        const svg = document.getElementById('arrowLayer');
+        boardEl.innerHTML = ''; boardEl.appendChild(svg);
+        const b = game.board();
+        const files = 'abcdefgh';
+        
+        for(let i=0; i<8; i++) {
+            for(let j=0; j<8; j++) {
+                const sq = b[i][j];
+                const coord = files[j] + (8-i);
+                const squareEl = document.createElement('div');
+                squareEl.className = `square ${(i+j)%2===0 ? 'white' : 'black'}`;
+                if (coord === selectedSquare) squareEl.classList.add('selected');
+                if (coord === lastMove.from || coord === lastMove.to) squareEl.classList.add('last-move');
+                if(sq) squareEl.innerText = pieces[sq.color][sq.type];
+                squareEl.onclick = () => handleSquareClick(i, j);
+                boardEl.appendChild(squareEl);
+            }
+        }
+        drawArrow();
+    }
+
+    async function handleSquareClick(r, c) {
+        const files = 'abcdefgh';
+        const squareCoord = `${files[c]}${8-r}`;
+        if(selectedSquare) {
+            const move = game.move({ from: selectedSquare, to: squareCoord, promotion: 'q' });
+            if(move) {
+                lastMove = { from: move.from, to: move.to };
+                // Añadir nota
+                const notesEl = document.getElementById('notes');
+                const moveCount = Math.ceil(game.history().length / 2);
+                notesEl.value += (game.turn() === 'b' ? ` ${move.san}` : `\n${moveCount}. ${move.san}`);
+                
+                // --- CAPTURA AUTOMÁTICA ---
+                moveImages.push(await captureBoardState());
+                
+                renderBoard();
+                if (game.in_checkmate()) setTimeout(finishGame, 500);
+            } else {
+                const piece = game.get(squareCoord);
+                selectedSquare = (piece && piece.color === game.turn()) ? squareCoord : null;
+                renderBoard();
+            }
+            selectedSquare = null;
+        } else {
+            const piece = game.get(squareCoord);
+            if(piece && piece.color === game.turn()) {
+                selectedSquare = squareCoord;
+                renderBoard();
+            }
+        }
+    }
+
+    // --- Funciones auxiliares ---
+    function getSquareCoords(coord) {
+        const files = 'abcdefgh';
+        const col = files.indexOf(coord[0]);
+        const row = 8 - parseInt(coord[1]);
+        return { x: col * 100 + 50, y: row * 100 + 50 };
+    }
+
+    function drawArrow() {
+        const line = document.getElementById('arrowLine');
+        if (lastMove.from && lastMove.to) {
+            const start = getSquareCoords(lastMove.from);
+            const end = getSquareCoords(lastMove.to);
+            line.setAttribute('x1', start.x); line.setAttribute('y1', start.y);
+            line.setAttribute('x2', end.x); line.setAttribute('y2', end.y);
+            line.style.display = 'block';
+        } else { line.style.display = 'none'; }
+    }
+
+    async function undoMove() {
+        const move = game.undo();
+        if(move) {
+            moveImages.pop(); // Quitar la imagen del movimiento deshecho
+            document.getElementById('notes').value = document.getElementById('notes').value.replace(new RegExp(`\\s*${move.san}\\s*$`), '');
+            const history = game.history({verbose: true});
+            lastMove = history.length > 0 ? { from: history[history.length-1].from, to: history[history.length-1].to } : { from: null, to: null };
+            renderBoard();
+        }
+    }
+
+    function redoMove() { /* Nota: Redo requiere rehacer captura, por simplificación esta vez omite redo para asegurar integridad de imágenes */ }
+</script>
+</body>
+</html>
