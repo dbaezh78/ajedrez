@@ -1,0 +1,14 @@
+Reporte: MateLegal_1
+
+Apuntes:
+ e4
+1. e5 Nf3
+2. Nc6 Bc4
+3. d6 Nc3
+4. Bg4 h3
+5. Bh5 Nxe5
+6. Bxd1 Bxf7+
+7. Ke7 Nd5#
+
+PGN:
+1. e4 e5 2. Nf3 Nc6 3. Bc4 d6 4. Nc3 Bg4 5. h3 Bh5 6. Nxe5 Bxd1 7. Bxf7+ Ke7 8. Nd5#
