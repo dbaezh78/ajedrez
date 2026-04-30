@@ -2,88 +2,105 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Jugadas Guardadas - Visor Interactivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugadas Guardadas - Visor Móvil Interactivo</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 95%; max-width: 1100px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #2c3e50; color: white; padding: 10px; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        .container { width: 95%; max-width: 1100px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; box-sizing: border-box; }
         
-        /* Estilos del Buscador */
-        .search-box { width: 100%; max-width: 400px; padding: 12px 20px; margin-bottom: 25px; border-radius: 25px; border: none; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        /* Buscador Responsivo */
+        .search-box { width: 100%; max-width: 400px; padding: 12px 20px; margin: 15px 0; border-radius: 25px; border: none; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
-        .folder-item { background: white; color: #333; margin: 15px 0; padding: 15px; border-radius: 8px; cursor: pointer; border-left: 8px solid #e67e22; transition: 0.2s; }
-        .folder-item:hover { background: #f9f9f9; }
-        .folder-item h3 { margin: 0; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
-        .file-list { margin-top: 15px; display: none; padding: 15px; background: #f4f4f4; border-radius: 5px; }
+        .folder-item { background: white; color: #333; margin: 10px 0; padding: 12px; border-radius: 8px; cursor: pointer; border-left: 6px solid #e67e22; transition: 0.2s; }
+        .folder-item h3 { margin: 0; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         
-        .text-viewer { background: #fff; color: #2c3e50; padding: 15px; border: 1px solid #ddd; border-radius: 5px; white-space: pre-wrap; font-family: monospace; margin-bottom: 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
+        .file-list { margin-top: 15px; display: none; padding: 10px; background: #f4f4f4; border-radius: 5px; }
+        .text-viewer { background: #fff; color: #2c3e50; padding: 12px; border: 1px solid #ddd; border-radius: 5px; white-space: pre-wrap; font-family: monospace; margin-bottom: 15px; max-height: 200px; overflow-y: auto; font-size: 14px; }
         
-        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .img-container { background: #ddd; padding: 5px; border-radius: 5px; text-align: center; }
-        .img-thumb { width: 100%; border-radius: 3px; cursor: zoom-in; }
+        /* Rejilla de imágenes adaptable */
+        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
         
-        /* MODAL CON TUS AJUSTES DE BOTONES */
+        /* --- MODAL OPTIMIZADO PARA MÓVIL --- */
         .modal-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; 
+            background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; 
+            touch-action: none; /* Evita el scroll del body al deslizar */
         }
-        .modal-content { max-width: 90%; max-height: 90%; position: relative; display: flex; align-items: center; }
-        .modal-content img { max-width: 100%; max-height: 85vh; border: 3px solid white; border-radius: 5px; }
+        .modal-content { width: 100%; height: 100%; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .modal-content img { max-width: 98%; max-height: 80vh; border: 2px solid white; border-radius: 5px; object-fit: contain; pointer-events: none; }
         
-        .close-modal { position: absolute; top: -50px; right: 0; color: white; font-size: 40px; cursor: pointer; }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: white; font-size: 45px; cursor: pointer; z-index: 1001; text-shadow: 0 0 10px black; }
         
+        /* Botones de navegación ocultos en móviles pequeños (se usa el dedo) */
         .nav-btn { 
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); 
-            color: white; border: none; font-size: 1rem; padding: 3%; cursor: pointer; border-radius: 50%;
-            transition: 0.3s; user-select: none;
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.1); 
+            color: white; border: none; font-size: 2rem; padding: 15px; cursor: pointer; border-radius: 50%;
+            z-index: 1001; transition: 0.3s;
         }
-        .nav-btn:hover { background: rgba(255,255,255,0.5); }
-        .prev { left: -60px; }
-        .next { right: -60px; }
+        .prev { left: 10px; }
+        .next { right: 10px; }
 
-        .badge { background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; }
-        .back-btn { margin-top: 20px; color: #bdc3c7; text-decoration: none; font-weight: bold; }
+        /* --- MEDIA QUERIES --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; text-align: center; }
+            .nav-btn { display: none; } /* En móviles usamos gestos */
+            .img-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+            .folder-item h3 { font-size: 0.9rem; flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+
+        .badge { background: #e67e22; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; }
+        .back-btn { margin: 10px 0; color: #bdc3c7; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <h1>Biblioteca de Jugadas Guardadas</h1>
+    <h1>Biblioteca de Jugadas</h1>
     
-    <a href="../index.html" class="back-btn">← Volver al Menú Principal</a>
+    <a href="../index.html" class="back-btn">← Menú Principal</a>
 
-    <input type="text" id="searchInput" class="search-box" placeholder="Buscar partida por nombre..." onkeyup="filterPartidas()">
+    <input type="text" id="searchInput" class="search-box" placeholder="Buscar partida..." onkeyup="filterPartidas()">
     
     <div class="container" id="libraryContainer"></div>
 
-    <div id="imageModal" class="modal-overlay" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
+    <div id="imageModal" class="modal-overlay">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <div class="modal-content" id="modalContent">
             <button class="nav-btn prev" onclick="changeImage(-1)">&#10094;</button>
             <img id="fullImage" src="" alt="Vista previa">
             <button class="nav-btn next" onclick="changeImage(1)">&#10095;</button>
-            <div id="caption" style="position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center;"></div>
+            <div id="caption" style="position: absolute; bottom: 20px; width: 100%; text-align: center; color: #aaa;"></div>
         </div>
     </div>
-
-    <!--
-        <a href="../index.html" class="back-btn">← Volver al Menú Principal</a>
-        -->
 
 <script>
     let currentGallery = [];
     let currentIndex = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
 
-    // Función de filtrado
+    // --- LÓGICA DE DESLIZAMIENTO (SWIPE) ---
+    const modalContent = document.getElementById('modalContent');
+    
+    modalContent.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    modalContent.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) changeImage(1);  // Deslizar izquierda -> Siguiente
+        if (touchEndX > touchStartX + 50) changeImage(-1); // Deslizar derecha -> Anterior
+    }
+
     function filterPartidas() {
         const input = document.getElementById('searchInput').value.toLowerCase();
         const items = document.getElementsByClassName('folder-item');
-
         for (let i = 0; i < items.length; i++) {
             const title = items[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
-            if (title.includes(input)) {
-                items[i].style.display = "";
-            } else {
-                items[i].style.display = "none";
-            }
+            items[i].style.display = title.includes(input) ? "" : "none";
         }
     }
 
@@ -137,18 +154,15 @@
                 let nombreArchivo = partida.nombre;
                 if (partida.sub) { rutaBase += '/' + partida.sub; nombreArchivo = partida.sub; }
 
-                const txtUrl = `${rutaBase}/${nombreArchivo}.txt`;
-                const textViewerId = `txt-${partida.nombre.replace(/\s/g, '')}`;
-
                 let galleryPaths = [];
                 for (let i = 0; i < partida.totalMovs; i++) {
                     galleryPaths.push(`${rutaBase}/movimiento_${i}.png`);
                 }
 
                 let imagenesHTML = galleryPaths.map((path, index) => `
-                    <div class="img-container">
-                        <img src="${path}" class="img-thumb" onclick="openModal(${index}, ${JSON.stringify(galleryPaths).replace(/"/g, '&quot;')})">
-                        <span style="font-size:10px; color:#666">Mov. ${index}</span>
+                    <div style="background:#ddd; padding:3px; border-radius:5px; text-align:center;">
+                        <img src="${path}" style="width:100%; border-radius:3px; cursor:zoom-in;" onclick="openModal(${index}, ${JSON.stringify(galleryPaths).replace(/"/g, '&quot;')})">
+                        <span style="font-size:9px; color:#666">Mov. ${index}</span>
                     </div>
                 `).join('');
 
@@ -158,9 +172,7 @@
                         <span class="badge">${partida.totalMovs} movs</span>
                     </h3>
                     <div class="file-list" id="list-${partida.nombre.replace(/\s/g, '')}">
-                        <strong>📝 Apuntes:</strong>
-                        <div class="text-viewer" id="${textViewerId}">Cargando...</div>
-                        <strong>🖼️ Galería:</strong>
+                        <div class="text-viewer" id="txt-${partida.nombre.replace(/\s/g, '')}">Cargando apuntes...</div>
                         <div class="img-grid">${imagenesHTML}</div>
                     </div>
                 `;
@@ -170,10 +182,9 @@
                         const list = document.getElementById(`list-${partida.nombre.replace(/\s/g, '')}`);
                         const isVisible = list.style.display === 'block';
                         list.style.display = isVisible ? 'none' : 'block';
-                        if (!isVisible) loadText(txtUrl, textViewerId);
+                        if (!isVisible) loadText(`${rutaBase}/${nombreArchivo}.txt`, `txt-${partida.nombre.replace(/\s/g, '')}`);
                     }
                 };
-
                 container.appendChild(folderDiv);
             });
         } catch (err) { console.error(err); }

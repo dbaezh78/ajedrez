@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Jugadas Guardadas - Visor Interactivo</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 95%; max-width: 1100px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; }
+        
+        /* Estilos del Buscador */
+        .search-box { width: 100%; max-width: 400px; padding: 12px 20px; margin-bottom: 25px; border-radius: 25px; border: none; font-size: 16px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+        .folder-item { background: white; color: #333; margin: 15px 0; padding: 15px; border-radius: 8px; cursor: pointer; border-left: 8px solid #e67e22; transition: 0.2s; }
+        .folder-item:hover { background: #f9f9f9; }
+        .folder-item h3 { margin: 0; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .file-list { margin-top: 15px; display: none; padding: 15px; background: #f4f4f4; border-radius: 5px; }
+        
+        .text-viewer { background: #fff; color: #2c3e50; padding: 15px; border: 1px solid #ddd; border-radius: 5px; white-space: pre-wrap; font-family: monospace; margin-bottom: 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
+        
+        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .img-container { background: #ddd; padding: 5px; border-radius: 5px; text-align: center; }
+        .img-thumb { width: 100%; border-radius: 3px; cursor: zoom-in; }
+        
+        /* MODAL CON TUS AJUSTES DE BOTONES */
+        .modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; 
+        }
+        .modal-content { max-width: 90%; max-height: 90%; position: relative; display: flex; align-items: center; }
+        .modal-content img { max-width: 100%; max-height: 85vh; border: 3px solid white; border-radius: 5px; }
+        
+        .close-modal { position: absolute; top: -50px; right: 0; color: white; font-size: 40px; cursor: pointer; }
+        
+        .nav-btn { 
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); 
+            color: white; border: none; font-size: 1rem; padding: 3%; cursor: pointer; border-radius: 50%;
+            transition: 0.3s; user-select: none;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.5); }
+        .prev { left: -60px; }
+        .next { right: -60px; }
+
+        .badge { background: #e67e22; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; }
+        .back-btn { margin-top: 20px; color: #bdc3c7; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Biblioteca de Jugadas Guardadas</h1>
+    
+    <a href="../index.html" class="back-btn">← Volver al Menú Principal</a>
+
+    <input type="text" id="searchInput" class="search-box" placeholder="Buscar partida por nombre..." onkeyup="filterPartidas()">
+    
+    <div class="container" id="libraryContainer"></div>
+
+    <div id="imageModal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <button class="nav-btn prev" onclick="changeImage(-1)">&#10094;</button>
+            <img id="fullImage" src="" alt="Vista previa">
+            <button class="nav-btn next" onclick="changeImage(1)">&#10095;</button>
+            <div id="caption" style="position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!--
+        <a href="../index.html" class="back-btn">← Volver al Menú Principal</a>
+        -->
+
+<script>
+    let currentGallery = [];
+    let currentIndex = 0;
+
+    // Función de filtrado
+    function filterPartidas() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const items = document.getElementsByClassName('folder-item');
+
+        for (let i = 0; i < items.length; i++) {
+            const title = items[i].getElementsByTagName('h3')[0].innerText.toLowerCase();
+            if (title.includes(input)) {
+                items[i].style.display = "";
+            } else {
+                items[i].style.display = "none";
+            }
+        }
+    }
+
+    function openModal(index, gallery) {
+        currentGallery = gallery;
+        currentIndex = index;
+        updateModalImage();
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function updateModalImage() {
+        const fullImg = document.getElementById('fullImage');
+        const caption = document.getElementById('caption');
+        fullImg.src = currentGallery[currentIndex];
+        caption.innerText = `Movimiento ${currentIndex} de ${currentGallery.length - 1}`;
+    }
+
+    function changeImage(step) {
+        currentIndex += step;
+        if (currentIndex >= currentGallery.length) currentIndex = 0;
+        if (currentIndex < 0) currentIndex = currentGallery.length - 1;
+        updateModalImage();
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    async function loadText(url, elementId) {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const text = await response.text();
+                document.getElementById(elementId).innerText = text;
+            }
+        } catch (e) { console.error("Error cargando texto"); }
+    }
+
+    async function loadLibrary() {
+        const container = document.getElementById('libraryContainer');
+        try {
+            const response = await fetch('carpetas.json');
+            const data = await response.json();
+            container.innerHTML = '';
+
+            data.partidas.forEach(partida => {
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder-item';
+                
+                let rutaBase = partida.nombre;
+                let nombreArchivo = partida.nombre;
+                if (partida.sub) { rutaBase += '/' + partida.sub; nombreArchivo = partida.sub; }
+
+                const txtUrl = `${rutaBase}/${nombreArchivo}.txt`;
+                const textViewerId = `txt-${partida.nombre.replace(/\s/g, '')}`;
+
+                let galleryPaths = [];
+                for (let i = 0; i < partida.totalMovs; i++) {
+                    galleryPaths.push(`${rutaBase}/movimiento_${i}.png`);
+                }
+
+                let imagenesHTML = galleryPaths.map((path, index) => `
+                    <div class="img-container">
+                        <img src="${path}" class="img-thumb" onclick="openModal(${index}, ${JSON.stringify(galleryPaths).replace(/"/g, '&quot;')})">
+                        <span style="font-size:10px; color:#666">Mov. ${index}</span>
+                    </div>
+                `).join('');
+
+                folderDiv.innerHTML = `
+                    <h3>
+                        <span>📂 ${partida.nombre} ${partida.sub ? ' / ' + partida.sub : ''}</span>
+                        <span class="badge">${partida.totalMovs} movs</span>
+                    </h3>
+                    <div class="file-list" id="list-${partida.nombre.replace(/\s/g, '')}">
+                        <strong>📝 Apuntes:</strong>
+                        <div class="text-viewer" id="${textViewerId}">Cargando...</div>
+                        <strong>🖼️ Galería:</strong>
+                        <div class="img-grid">${imagenesHTML}</div>
+                    </div>
+                `;
+
+                folderDiv.onclick = (e) => {
+                    if (e.target.tagName !== 'IMG') {
+                        const list = document.getElementById(`list-${partida.nombre.replace(/\s/g, '')}`);
+                        const isVisible = list.style.display === 'block';
+                        list.style.display = isVisible ? 'none' : 'block';
+                        if (!isVisible) loadText(txtUrl, textViewerId);
+                    }
+                };
+
+                container.appendChild(folderDiv);
+            });
+        } catch (err) { console.error(err); }
+    }
+
+    window.onload = loadLibrary;
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('imageModal').style.display === 'flex') {
+            if (e.key === "Escape") closeModal();
+            if (e.key === "ArrowRight") changeImage(1);
+            if (e.key === "ArrowLeft") changeImage(-1);
+        }
+    });
+</script>
+</body>
+</html>
