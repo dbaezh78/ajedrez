@@ -4,7 +4,7 @@ let selectedPiece = null;
 let currentTurn = 'white';
 let gameStarted = false;
 
-// --- VARIABLES DE REGISTRO Y TIEMPO ---
+// --- VARIABLES DE REGISTRO Y TIEMPO --
 let moveHistory = [];
 let moveNumber = 1;
 
@@ -40,1016 +40,600 @@ let castlingRights = {
 // Variable para peón al paso
 let enPassantTarget = null;
 
-// Almacenar información adicional para deshacer movimientos
+// Arreglo para almacenar los detalles de cada jugada (Rastro y botón Volver)
 let moveDetails = [];
 
-// Símbolos de las piezas y su código
+// Símbolos de las piezas apuntando a tus rutas locales SVG
 const PIECES = {
-    'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
-    'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟'
+    'R': '<img src="../src/img/wR.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'N': '<img src="../src/img/wN.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'B': '<img src="../src/img/wB.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'Q': '<img src="../src/img/wQ.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'K': '<img src="../src/img/wK.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'P': '<img src="../src/img/wP.svg" style="width:85%; height:85%; pointer-events:none;">',
+    
+    'r': '<img src="../src/img/bR.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'n': '<img src="../src/img/bN.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'b': '<img src="../src/img/bB.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'q': '<img src="../src/img/bQ.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'k': '<img src="../src/img/bK.svg" style="width:85%; height:85%; pointer-events:none;">',
+    'p': '<img src="../src/img/bP.svg" style="width:85%; height:85%; pointer-events:none;">'
 };
 
-// Representación lógica del tablero (Matriz 8x8)
-let boardState = [
+const boardSize = 8;
+let initialBoard = [
     ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    ['', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', ''],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
     ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
     ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 
-const boardSize = 8;
-
-// ===========================================
-//             FUNCIONES DE UTILIDAD
-// ===========================================
-
 function idToCoords(id) {
-    const col = id.charCodeAt(0) - 'a'.charCodeAt(0);
+    const col = id.charCodeAt(0) - 97;
     const row = 8 - parseInt(id[1]);
-    return [row, col];
+    return { row, col };
 }
 
 function coordsToId(row, col) {
-    const colLetter = String.fromCharCode('a'.charCodeAt(0) + col);
+    const colLetter = String.fromCharCode(97 + col);
     const rowNumber = 8 - row;
     return colLetter + rowNumber;
 }
 
-function getPieceCode(row, col) {
-    if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-        return boardState[row][col];
-    }
-    return '';
-}
+// --- RENDERIZADO DEL TABLERO Y RESALTADOS VISUALES ---
+function updateDOM() {
+    for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+            const id = coordsToId(row, col);
+            const square = document.getElementById(id);
+            const pieceCode = initialBoard[row][col];
 
-function getPieceColor(pieceCode) {
-    if (!pieceCode) return null;
-    return (pieceCode === pieceCode.toUpperCase()) ? 'white' : 'black';
-}
+            // Limpiamos los rastros anteriores
+            square.classList.remove('selected', 'last-move', 'possible-move', 'king-in-check');
 
-// ===========================================
-//         PEÓN AL PASO (EN PASSANT)
-// ===========================================
-
-function isValidEnPassant(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    
-    // Verificar que sea un peón
-    if (pieceCode.toUpperCase() !== 'P') return false;
-    
-    // Verificar que se mueve diagonalmente una casilla
-    const rowDiff = endRow - startRow;
-    const colDiff = Math.abs(endCol - startCol);
-    
-    if (colDiff !== 1 || Math.abs(rowDiff) !== 1) return false;
-    
-    // Verificar que la casilla de destino esté vacía
-    if (boardState[endRow][endCol] !== '') return false;
-    
-    // Verificar que hay un peón enemigo en la casilla adyacente horizontalmente
-    const enemyPawnRow = startRow; // Misma fila
-    const enemyPawnCol = endCol;   // Misma columna que el destino
-    const enemyPawn = boardState[enemyPawnRow][enemyPawnCol];
-    
-    if (!enemyPawn || enemyPawn.toUpperCase() !== 'P') return false;
-    if (getPieceColor(enemyPawn) === getPieceColor(pieceCode)) return false;
-    
-    // Verificar que el peón enemigo acaba de moverse dos casillas
-    if (enPassantTarget && enPassantTarget.row === enemyPawnRow && enPassantTarget.col === enemyPawnCol) {
-        return true;
-    }
-    
-    return false;
-}
-
-function executeEnPassant(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    
-    // Mover el peón
-    boardState[endRow][endCol] = pieceCode;
-    boardState[startRow][startCol] = '';
-    
-    // Capturar el peón enemigo (que está en la misma fila inicial, misma columna del destino)
-    const capturedPawnRow = startRow;
-    const capturedPawnCol = endCol;
-    boardState[capturedPawnRow][capturedPawnCol] = '';
-}
-
-// ===========================================
-//         CORONACIÓN DE PEONES
-// ===========================================
-
-function showPromotionModal(row, col, pieceColor) {
-    pendingPromotion = { row, col, color: pieceColor };
-    promotionModal.style.display = 'block';
-}
-
-function hidePromotionModal() {
-    promotionModal.style.display = 'none';
-    pendingPromotion = null;
-}
-
-function handlePromotion(pieceCode) {
-    if (!pendingPromotion) return;
-    
-    const { row, col, color } = pendingPromotion;
-    
-    // Convertir el código de pieza según el color
-    const newPieceCode = color === 'white' ? pieceCode : pieceCode.toLowerCase();
-    
-    // Reemplazar el peón con la nueva pieza
-    boardState[row][col] = newPieceCode;
-    
-    // Actualizar el DOM
-    updateDOM();
-    
-    // Ocultar el modal
-    hidePromotionModal();
-    
-    // Continuar con el cambio de turno
-    completeTurnSwitch();
-}
-
-function checkForPromotion(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    
-    // Verificar si es un peón que llegó al extremo opuesto
-    if (pieceCode.toUpperCase() === 'P') {
-        const pieceColor = getPieceColor(pieceCode);
-        
-        // Peón blanco en fila 0 (última fila para blancas)
-        if (pieceColor === 'white' && endRow === 0) {
-            return true;
-        }
-        
-        // Peón negro en fila 7 (última fila para negras)
-        if (pieceColor === 'black' && endRow === 7) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-// ===========================================
-//         DETECCIÓN DE JAQUE Y JAQUE MATE
-// ===========================================
-
-function findKingPosition(color) {
-    const kingCode = color === 'white' ? 'K' : 'k';
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            if (boardState[row][col] === kingCode) {
-                return [row, col];
+            if (pieceCode !== ' ') {
+                square.innerHTML = PIECES[pieceCode];
+            } else {
+                square.innerHTML = '';
             }
         }
     }
-    return null;
-}
 
-function isSquareAttackedBy(square, attackerColor) {
-    const [targetRow, targetCol] = square;
-    
-    // Verificar ataques de peones
-    const pawnDirection = attackerColor === 'white' ? -1 : 1;
-    const pawnCode = attackerColor === 'white' ? 'P' : 'p';
-    
-    // Ataques diagonales de peones
-    const pawnAttackSquares = [
-        [targetRow - pawnDirection, targetCol - 1],
-        [targetRow - pawnDirection, targetCol + 1]
-    ];
-    
-    for (const [row, col] of pawnAttackSquares) {
-        if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-            if (boardState[row][col] === pawnCode) {
-                return true;
-            }
+    // Resalta la pieza que tienes seleccionada para mover en verde
+    if (selectedSquare) {
+        const selectedElement = document.getElementById(selectedSquare);
+        if (selectedElement) {
+            selectedElement.classList.add('selected');
         }
-    }
-    
-    // Verificar ataques de caballos
-    const knightMoves = [
-        [2, 1], [2, -1], [-2, 1], [-2, -1],
-        [1, 2], [1, -2], [-1, 2], [-1, -2]
-    ];
-    const knightCode = attackerColor === 'white' ? 'N' : 'n';
-    
-    for (const [dr, dc] of knightMoves) {
-        const row = targetRow + dr;
-        const col = targetCol + dc;
-        if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-            if (boardState[row][col] === knightCode) {
-                return true;
-            }
-        }
-    }
-    
-    // Verificar ataques en línea recta (torres y reinas)
-    const straightDirections = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    const rookCode = attackerColor === 'white' ? 'R' : 'r';
-    const queenCode = attackerColor === 'white' ? 'Q' : 'q';
-    
-    for (const [dr, dc] of straightDirections) {
-        let row = targetRow + dr;
-        let col = targetCol + dc;
-        
-        while (row >= 0 && row < 8 && col >= 0 && col < 8) {
-            const piece = boardState[row][col];
-            if (piece !== '') {
-                if (piece === rookCode || piece === queenCode) {
-                    return true;
-                }
-                break;
-            }
-            row += dr;
-            col += dc;
-        }
-    }
-    
-    // Verificar ataques diagonales (alfiles y reinas)
-    const diagonalDirections = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-    const bishopCode = attackerColor === 'white' ? 'B' : 'b';
-    
-    for (const [dr, dc] of diagonalDirections) {
-        let row = targetRow + dr;
-        let col = targetCol + dc;
-        
-        while (row >= 0 && row < 8 && col >= 0 && col < 8) {
-            const piece = boardState[row][col];
-            if (piece !== '') {
-                if (piece === bishopCode || piece === queenCode) {
-                    return true;
-                }
-                break;
-            }
-            row += dr;
-            col += dc;
-        }
-    }
-    
-    // Verificar ataques de rey
-    const kingCode = attackerColor === 'white' ? 'K' : 'k';
-    for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const row = targetRow + dr;
-            const col = targetCol + dc;
-            if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-                if (boardState[row][col] === kingCode) {
-                    return true;
-                }
-            }
-        }
-    }
-    
-    return false;
-}
 
-function isKingInCheck(color) {
-    const kingPosition = findKingPosition(color);
-    if (!kingPosition) return false;
-    
-    const attackerColor = color === 'white' ? 'black' : 'white';
-    return isSquareAttackedBy(kingPosition, attackerColor);
-}
-
-function hasAnyValidMove(color) {
-    for (let startRow = 0; startRow < 8; startRow++) {
-        for (let startCol = 0; startCol < 8; startCol++) {
-            const pieceCode = boardState[startRow][startCol];
-            if (pieceCode && getPieceColor(pieceCode) === color) {
-                for (let endRow = 0; endRow < 8; endRow++) {
-                    for (let endCol = 0; endCol < 8; endCol++) {
-                        if (isValidMove(pieceCode, [startRow, startCol], [endRow, endCol])) {
-                            return true;
+        // Puntos guías de jugadas posibles (filtrando jugadas ilegales o que no salvan al rey)
+        for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+                const targetId = coordsToId(row, col);
+                if (targetId !== selectedSquare) {
+                    if (isValidMove(selectedSquare, targetId) && !wouldLeaveKingInCheck(selectedSquare, targetId)) {
+                        const targetSquare = document.getElementById(targetId);
+                        if (targetSquare) {
+                            targetSquare.classList.add('possible-move');
                         }
                     }
                 }
             }
         }
     }
-    return false;
-}
 
-function isCheckmate(color) {
-    return isKingInCheck(color) && !hasAnyValidMove(color);
-}
-
-function isStalemate(color) {
-    return !isKingInCheck(color) && !hasAnyValidMove(color);
-}
-
-function updateTurnDisplay() {
-    let displayText = `Turno: ${currentTurn === 'white' ? 'Blancas' : 'Negras'}`;
-    
-    if (currentTurn === 'gameOver') return;
-    
-    if (isKingInCheck(currentTurn)) {
-        const kingColor = currentTurn === 'white' ? 'BLANCO' : 'NEGRO';
-        if (isCheckmate(currentTurn)) {
-            displayText = `<span class="checkmate-warning">¡JAQUE MATE! Ganan las ${currentTurn === 'white' ? 'NEGRAS' : 'BLANCAS'}</span>`;
-            endGameByCheckmate(currentTurn === 'white' ? 'black' : 'white');
-        } else {
-            displayText += ` | <span class="check-warning">JAQUE AL REY ${kingColor}</span>`;
-        }
-    } else if (isStalemate(currentTurn)) {
-        displayText = `<span class="stalemate-warning">¡TABLAS POR AHOGADO!</span>`;
-        endGameByStalemate();
-    }
-    
-    turnDisplay.innerHTML = displayText;
-}
-
-function endGameByCheckmate(winnerColor) {
-    if (timerInterval) clearInterval(timerInterval);
-    currentTurn = 'gameOver';
-    
-    whiteButton.disabled = true;
-    blackButton.disabled = true;
-    undoButton.disabled = true;
-    
-    setTimeout(() => {
-        alert(`¡JAQUE MATE! El jugador ${winnerColor === 'white' ? 'Blanco' : 'Negro'} gana la partida.`);
-    }, 100);
-}
-
-function endGameByStalemate() {
-    if (timerInterval) clearInterval(timerInterval);
-    currentTurn = 'gameOver';
-    
-    whiteButton.disabled = true;
-    blackButton.disabled = true;
-    undoButton.disabled = true;
-    
-    setTimeout(() => {
-        alert("¡Tablas por ahogado! La partida termina en empate.");
-    }, 100);
-}
-
-// ===========================================
-//         LÓGICA DE ENROQUE
-// ===========================================
-
-function updateCastlingRights(pieceCode, start) {
-    const [startRow, startCol] = start;
-    const color = getPieceColor(pieceCode);
-    
-    if (pieceCode.toUpperCase() === 'K') {
-        castlingRights[color].kingside = false;
-        castlingRights[color].queenside = false;
-    }
-    
-    if (pieceCode.toUpperCase() === 'R') {
-        if (color === 'white') {
-            if (startRow === 7 && startCol === 0) castlingRights.white.queenside = false;
-            if (startRow === 7 && startCol === 7) castlingRights.white.kingside = false;
-        } else {
-            if (startRow === 0 && startCol === 0) castlingRights.black.queenside = false;
-            if (startRow === 0 && startCol === 7) castlingRights.black.kingside = false;
+    // PINTAR EL REY EN ROJO SI ESTÁ EN JAQUE ACTIVO
+    if (gameStarted && currentTurn !== 'gameOver') {
+        if (isKingInCheck(currentTurn, initialBoard)) {
+            const kingSquareId = findKingPosition(currentTurn, initialBoard);
+            if (kingSquareId) {
+                const kingSquareElement = document.getElementById(kingSquareId);
+                if (kingSquareElement) {
+                    kingSquareElement.classList.add('king-in-check');
+                }
+            }
         }
     }
-}
 
-function isValidCastling(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    const color = getPieceColor(pieceCode);
-    
-    if (pieceCode.toUpperCase() !== 'K') return false;
-    if (startRow !== endRow) return false;
-    if (Math.abs(startCol - endCol) !== 2) return false;
-    
-    const isKingside = endCol > startCol;
-    
-    if (isKingside && !castlingRights[color].kingside) return false;
-    if (!isKingside && !castlingRights[color].queenside) return false;
-    
-    if (isKingInCheck(color)) return false;
-    
-    const direction = isKingside ? 1 : -1;
-    for (let col = startCol + direction; col !== (isKingside ? 7 : 0); col += direction) {
-        if (boardState[startRow][col] !== '') return false;
+    // Dibuja la marca fija del último movimiento (Amarillo Suave)
+    if (moveDetails.length > 0) {
+        const lastMove = moveDetails[moveDetails.length - 1];
+        highlightLastMove(lastMove.fromId, lastMove.toId);
     }
-    
-    const intermediateCol = startCol + direction;
-    if (isSquareAttackedBy([startRow, intermediateCol], color === 'white' ? 'black' : 'white')) return false;
-    
-    return true;
 }
 
-function executeCastling(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    const color = getPieceColor(pieceCode);
-    const isKingside = endCol > startCol;
-    
-    boardState[endRow][endCol] = pieceCode;
-    boardState[startRow][startCol] = '';
-    
-    const rookStartCol = isKingside ? 7 : 0;
-    const rookEndCol = isKingside ? endCol - 1 : endCol + 1;
-    const rookCode = color === 'white' ? 'R' : 'r';
-    
-    boardState[startRow][rookEndCol] = rookCode;
-    boardState[startRow][rookStartCol] = '';
-    
-    castlingRights[color].kingside = false;
-    castlingRights[color].queenside = false;
+function highlightLastMove(fromId, toId) {
+    const fromSquare = document.getElementById(fromId);
+    const toSquare = document.getElementById(toId);
+    if (fromSquare) fromSquare.classList.add('last-move');
+    if (toSquare) toSquare.classList.add('last-move');
 }
 
-// ===========================================
-//         LÓGICA DE MOVIMIENTO (REGLAS)
-// ===========================================
+// --- SELECCIÓN Y PROCESAMIENTO ORDENADO DE CLICS (SIN DELAY VISUAL) ---
+function handleSquareClick(event) {
+    if (!gameStarted || currentTurn === 'gameOver') return;
+    const clickedSquareId = event.currentTarget.id;
+    const { row, col } = idToCoords(clickedSquareId);
+    const piece = initialBoard[row][col];
 
-function isValidMove(pieceCode, start, end) {
-    const [endRow, endCol] = end;
-    const pieceType = pieceCode.toUpperCase();
-    const pieceColor = getPieceColor(pieceCode);
-    const targetPieceCode = getPieceCode(endRow, endCol);
-    const targetColor = getPieceColor(targetPieceCode);
-    
-    if (targetColor === pieceColor) {
-        return false;
-    }
-
-    let isValidBasicMove = false;
-    switch (pieceType) {
-        case 'P': 
-            // Verificar peón al paso primero
-            if (isValidEnPassant(pieceCode, start, end)) {
-                return !wouldMoveCauseCheck(pieceCode, start, end, pieceColor);
-            }
-            isValidBasicMove = isValidPawnMove(pieceCode, start, end); 
-            break;
-        case 'R': isValidBasicMove = isValidRookMove(pieceCode, start, end); break;
-        case 'B': isValidBasicMove = isValidBishopMove(pieceCode, start, end); break;
-        case 'Q': isValidBasicMove = isValidQueenMove(pieceCode, start, end); break;
-        case 'K': 
-            if (isValidCastling(pieceCode, start, end)) {
-                return !wouldMoveCauseCheck(pieceCode, start, end, pieceColor);
-            }
-            isValidBasicMove = isValidKingMove(pieceCode, start, end); 
-            break;
-        case 'N': isValidBasicMove = isValidKnightMove(pieceCode, start, end); break;
-        default: return false;
-    }
-    
-    if (!isValidBasicMove) return false;
-    
-    return !wouldMoveCauseCheck(pieceCode, start, end, pieceColor);
-}
-
-function wouldMoveCauseCheck(pieceCode, start, end, pieceColor) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    
-    const originalTargetPiece = boardState[endRow][endCol];
-    
-    // Simular peón al paso
-    let capturedEnPassantPiece = '';
-    let capturedEnPassantRow = -1;
-    let capturedEnPassantCol = -1;
-    
-    if (pieceCode.toUpperCase() === 'P' && isValidEnPassant(pieceCode, start, end)) {
-        capturedEnPassantRow = startRow;
-        capturedEnPassantCol = endCol;
-        capturedEnPassantPiece = boardState[capturedEnPassantRow][capturedEnPassantCol];
-        boardState[capturedEnPassantRow][capturedEnPassantCol] = '';
-    }
-    
-    boardState[endRow][endCol] = pieceCode;
-    boardState[startRow][startCol] = '';
-    
-    const causesCheck = isKingInCheck(pieceColor);
-    
-    // Revertir movimiento
-    boardState[startRow][startCol] = pieceCode;
-    boardState[endRow][endCol] = originalTargetPiece;
-    
-    // Revertir captura de peón al paso si se simuló
-    if (capturedEnPassantPiece !== '') {
-        boardState[capturedEnPassantRow][capturedEnPassantCol] = capturedEnPassantPiece;
-    }
-    
-    return causesCheck;
-}
-
-function isValidPawnMove(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-    const direction = (pieceCode === 'P') ? -1 : 1;
-    const targetPieceCode = getPieceCode(endRow, endCol);
-
-    const rowDiff = endRow - startRow;
-    const colDiff = Math.abs(endCol - startCol);
-    
-    // Movimiento hacia adelante
-    if (colDiff === 0 && rowDiff === direction && targetPieceCode === '') return true;
-
-    // Movimiento inicial de dos casillas
-    const isInitialRow = (pieceCode === 'P' && startRow === 6) || (pieceCode === 'p' && startRow === 1);
-    const isNextSquareEmpty = getPieceCode(startRow + direction, startCol) === '';
-    
-    if (isInitialRow && colDiff === 0 && rowDiff === 2 * direction && targetPieceCode === '' && isNextSquareEmpty) return true;
-    
-    // Captura diagonal normal
-    if (colDiff === 1 && rowDiff === direction && targetPieceCode !== '') return true;
-
-    return false;
-}
-
-function isValidRookMove(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-
-    if (startRow !== endRow && startCol !== endCol) return false;
-    
-    if (startRow === endRow) {
-        const step = (endCol > startCol) ? 1 : -1;
-        for (let col = startCol + step; col !== endCol; col += step) {
-            if (getPieceCode(startRow, col) !== '') return false;
+    if (selectedSquare === null) {
+        // Primer clic: Seleccionar pieza propia
+        if (piece !== ' ' && isOwnPiece(piece)) {
+            selectedSquare = clickedSquareId;
+            selectedPiece = piece;
+            updateDOM();
         }
     } else {
-        const step = (endRow > startRow) ? 1 : -1;
-        for (let row = startRow + step; row !== endRow; row += step) {
-            if (getPieceCode(row, startCol) !== '') return false;
+        // Segundo clic: Ya hay una pieza seleccionada
+        if (selectedSquare === clickedSquareId) {
+            // Deseleccionar al pulsar la misma pieza
+            selectedSquare = null;
+            selectedPiece = null;
+            updateDOM();
+        } else if (piece !== ' ' && isOwnPiece(piece)) {
+            // Cambiar de pieza seleccionada a otra propia
+            selectedSquare = clickedSquareId;
+            selectedPiece = piece;
+            updateDOM();
+        } else {
+            // Intentar mover a casilla vacía o capturar pieza enemiga
+            if (isValidMove(selectedSquare, clickedSquareId) && !wouldLeaveKingInCheck(selectedSquare, clickedSquareId)) {
+                executeMove(selectedSquare, clickedSquareId); // Modifica la matriz y actualiza el DOM de inmediato
+            } else {
+                // Si el movimiento es inválido, limpiamos la selección
+                selectedSquare = null;
+                selectedPiece = null;
+                updateDOM();
+            }
         }
     }
-    return true;
 }
 
-function isValidBishopMove(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
+function isOwnPiece(piece) {
+    if (currentTurn === 'white' && piece === piece.toUpperCase()) return true;
+    if (currentTurn === 'black' && piece === piece.toLowerCase()) return true;
+    return false;
+}
 
-    if (Math.abs(startRow - endRow) !== Math.abs(startCol - endCol)) return false;
+function isValidMove(fromId, toId, boardState = initialBoard) {
+    const from = idToCoords(fromId);
+    const to = idToCoords(toId);
+    const piece = boardState[from.row][from.col].toUpperCase();
 
-    const rowStep = (endRow > startRow) ? 1 : -1;
-    const colStep = (endCol > startCol) ? 1 : -1;
+    const rowDiff = to.row - from.row;
+    const colDiff = to.col - from.col;
+
+    const targetPiece = boardState[to.row][to.col];
     
-    let currentRow = startRow + rowStep;
-    let currentCol = startCol + colStep;
+    if (targetPiece !== ' ') {
+        const isWhitePiece = boardState[from.row][from.col] === boardState[from.row][from.col].toUpperCase();
+        const isTargetWhite = targetPiece === targetPiece.toUpperCase();
+        if (isWhitePiece === isTargetWhite) return false;
+    }
 
-    while (currentRow !== endRow) {
-        if (getPieceCode(currentRow, currentCol) !== '') return false;
-        currentRow += rowStep;
-        currentCol += colStep;
+    switch (piece) {
+        case 'P': return validatePawnMove(from, to, rowDiff, colDiff, toId, boardState);
+        case 'R': return validateRookMove(from, to, boardState);
+        case 'N': return (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) || (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2);
+        case 'B': return validateBishopMove(from, to, boardState);
+        case 'Q': return validateRookMove(from, to, boardState) || validateBishopMove(from, to, boardState);
+        case 'K': return validateKingMove(from, to, rowDiff, colDiff, boardState);
+    }
+    return false;
+}
+
+function validatePawnMove(from, to, rowDiff, colDiff, toId, boardState) {
+    const color = boardState[from.row][from.col] === 'P' ? 'white' : 'black';
+    const direction = color === 'white' ? -1 : 1;
+    const startRow = color === 'white' ? 6 : 1;
+    const targetPiece = boardState[to.row][to.col];
+
+    if (colDiff === 0) {
+        if (rowDiff === direction && targetPiece === ' ') return true;
+        if (rowDiff === 2 * direction && from.row === startRow) {
+            const middlePiece = boardState[from.row + direction][from.col];
+            if (targetPiece === ' ' && middlePiece === ' ') return true;
+        }
+    } else if (Math.abs(colDiff) === 1 && rowDiff === direction) {
+        if (targetPiece !== ' ') return true;
+        if (enPassantTarget && toId === enPassantTarget) return true; // Captura al paso
+    }
+    return false;
+}
+
+function validateRookMove(from, to, boardState) {
+    if (from.row !== to.row && from.col !== to.col) return false;
+    const rowStep = from.row === to.row ? 0 : (to.row > from.row ? 1 : -1);
+    const colStep = from.col === to.col ? 0 : (to.col > from.col ? 1 : -1);
+    let r = from.row + rowStep;
+    let c = from.col + colStep;
+    while (r !== to.row || c !== to.col) {
+        if (boardState[r][c] !== ' ') return false;
+        r += rowStep; c += colStep;
     }
     return true;
 }
 
-function isValidQueenMove(pieceCode, start, end) {
-    return isValidRookMove(pieceCode, start, end) || isValidBishopMove(pieceCode, start, end);
+function validateBishopMove(from, to, boardState) {
+    if (Math.abs(to.row - from.row) !== Math.abs(to.col - from.col)) return false;
+    const rowStep = to.row > from.row ? 1 : -1;
+    const colStep = to.col > from.col ? 1 : -1;
+    let r = from.row + rowStep;
+    let c = from.col + colStep;
+    while (r !== to.row || c !== to.col) {
+        if (boardState[r][c] !== ' ') return false;
+        r += rowStep; c += colStep;
+    }
+    return true;
 }
 
-function isValidKingMove(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
-
-    const rowDiff = Math.abs(startRow - endRow);
-    const colDiff = Math.abs(startCol - endCol);
+function validateKingMove(from, to, rowDiff, colDiff, boardState) {
+    if (Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1) return true;
     
-    return rowDiff <= 1 && colDiff <= 1;
+    // REGLA DE ENROQUE REVISADA (FIDE)
+    if (boardState === initialBoard && rowDiff === 0 && Math.abs(colDiff) === 2) {
+        const side = currentTurn;
+        const castling = castlingRights[side];
+        if (side === 'white' && from.row !== 7) return false;
+        if (side === 'black' && from.row !== 0) return false;
+        
+        // No se puede enrocar si estás en jaque actualmente
+        if (isKingInCheck(side, boardState)) return false;
+
+        if (colDiff === 2 && castling.kingside) {
+            if (boardState[from.row][5] === ' ' && boardState[from.row][6] === ' ') {
+                // No puede pasar por una casilla bajo ataque enemigo
+                if (isSquareAttacked(coordsToId(from.row, 5), side, boardState)) return false;
+                return true;
+            }
+        }
+        if (colDiff === -2 && castling.queenside) {
+            if (boardState[from.row][3] === ' ' && boardState[from.row][2] === ' ' && boardState[from.row][1] === ' ') {
+                // No puede pasar por una casilla bajo ataque enemigo
+                if (isSquareAttacked(coordsToId(from.row, 3), side, boardState)) return false;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
-function isValidKnightMove(pieceCode, start, end) {
-    const [startRow, startCol] = start;
-    const [endRow, endCol] = end;
+// --- LOGICA DE PROTECCIÓN Y DETECCIÓN DE AMENAZAS ---
+function isSquareAttacked(squareId, defendingColor, boardState) {
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            const piece = boardState[r][c];
+            if (piece !== ' ') {
+                const isPieceWhite = piece === piece.toUpperCase();
+                const isDefendingWhite = defendingColor === 'white';
+                if (isPieceWhite !== isDefendingWhite) {
+                    if (isValidMove(coordsToId(r, c), squareId, boardState)) return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
-    const rowDiff = Math.abs(startRow - endRow);
-    const colDiff = Math.abs(startCol - endCol);
+function findKingPosition(color, boardState) {
+    const kingCode = color === 'white' ? 'K' : 'k';
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            if (boardState[r][c] === kingCode) return coordsToId(r, c);
+        }
+    }
+    return null;
+}
+
+function isKingInCheck(color, boardState) {
+    const kingId = findKingPosition(color, boardState);
+    if (!kingId) return false;
+    return isSquareAttacked(kingId, color, boardState);
+}
+
+function wouldLeaveKingInCheck(fromId, toId) {
+    const from = idToCoords(fromId);
+    const to = idToCoords(toId);
+    let virtualBoard = initialBoard.map(row => [...row]);
+    const piece = virtualBoard[from.row][from.col];
     
-    return (rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2);
-}
-
-// ===========================================
-//         LÓGICA DE TIEMPO Y TURNO
-// ===========================================
-
-function formatTime(seconds) {
-    if (seconds < 0) return "0:00";
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-}
-
-function endGame(winnerColor) {
-    if (timerInterval) clearInterval(timerInterval);
-    currentTurn = 'gameOver';
-
-    whiteButton.disabled = true;
-    blackButton.disabled = true;
-    undoButton.disabled = true;
+    if (piece.toUpperCase() === 'P' && Math.abs(to.col - from.col) === 1 && virtualBoard[to.row][to.col] === ' ') {
+        const direction = piece === 'P' ? -1 : 1;
+        virtualBoard[to.row - direction][to.col] = ' ';
+    }
     
-    alert(`¡Fin del juego! El jugador ${winnerColor === 'white' ? 'Blanco' : 'Negro'} gana por tiempo.`);
+    virtualBoard[to.row][to.col] = piece;
+    virtualBoard[from.row][from.col] = ' ';
+    return isKingInCheck(currentTurn, virtualBoard);
 }
 
-function updateTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    if (currentTurn === 'gameOver' || !gameStarted) return;
+// --- SISTEMA REGLAMENTO FIDE: ANÁLISIS DE FIN DE PARTIDA ---
+function countLegalMoves(color) {
+    let legalMovesCount = 0;
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            const piece = initialBoard[r][c];
+            if (piece !== ' ') {
+                const isPieceWhite = piece === piece.toUpperCase();
+                const isColorWhite = color === 'white';
+                if (isPieceWhite === isColorWhite) {
+                    const fromId = coordsToId(r, c);
+                    for (let tr = 0; tr < boardSize; tr++) {
+                        for (let tc = 0; tc < boardSize; tc++) {
+                            const toId = coordsToId(tr, tc);
+                            if (fromId !== toId) {
+                                if (isValidMove(fromId, toId) && !wouldLeaveKingInCheck(fromId, toId)) {
+                                    legalMovesCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return legalMovesCount;
+}
 
-    const runningPlayer = currentTurn;
+// --- EJECUCIÓN DEL MOVIMIENTO SEGURO ---
+function executeMove(fromId, toId) {
+    const from = idToCoords(fromId);
+    const to = idToCoords(toId);
+    const p = initialBoard[from.row][from.col];
 
+    let capturedPiece = initialBoard[to.row][to.col];
+    let isEnPassant = false;
+    let castledSide = null;
+
+    let prevCastling = { white: { ...castlingRights.white }, black: { ...castlingRights.black } };
+    let prevEnPassant = enPassantTarget;
+
+    // Procesar captura al paso en la matriz
+    if (p.toUpperCase() === 'P' && Math.abs(to.col - from.col) === 1 && capturedPiece === ' ') {
+        const direction = p === 'P' ? -1 : 1;
+        capturedPiece = initialBoard[to.row - direction][to.col];
+        initialBoard[to.row - direction][to.col] = ' ';
+        isEnPassant = true;
+    }
+
+    // Procesar movimiento de la torre en caso de enroque
+    if (p.toUpperCase() === 'K' && Math.abs(to.col - from.col) === 2) {
+        if (to.col === 6) {
+            initialBoard[from.row][5] = initialBoard[from.row][7];
+            initialBoard[from.row][7] = ' ';
+            castledSide = 'kingside';
+        } else if (to.col === 2) {
+            initialBoard[from.row][3] = initialBoard[from.row][0];
+            initialBoard[from.row][0] = ' ';
+            castledSide = 'queenside';
+        }
+    }
+
+    // Movemos la pieza físicamente en la matriz
+    initialBoard[to.row][to.col] = p;
+    initialBoard[from.row][from.col] = ' ';
+
+    // Cancelar derechos de enroques según la pieza movida
+    if (p === 'K') { castlingRights.white.kingside = false; castlingRights.white.queenside = false; }
+    if (p === 'k') { castlingRights.black.kingside = false; castlingRights.black.queenside = false; }
+    if (p === 'R' && from.row === 7 && from.col === 7) castlingRights.white.kingside = false;
+    if (p === 'R' && from.row === 7 && from.col === 0) castlingRights.white.queenside = false;
+    if (p === 'r' && from.row === 0 && from.col === 7) castlingRights.black.kingside = false;
+    if (p === 'r' && from.row === 0 && from.col === 0) castlingRights.black.queenside = false;
+
+    // Habilitar casilla de peligro al paso si corresponde
+    let nextEnPassant = null;
+    if (p.toUpperCase() === 'P' && Math.abs(to.row - from.row) === 2) {
+        const direction = p === 'P' ? -1 : 1;
+        nextEnPassant = coordsToId(from.row + direction, from.col);
+    }
+    enPassantTarget = nextEnPassant;
+
+    // REGISTRO DE DATOS SEGURO PARA EL RASTRO Y EL BOTÓN DESHACER
+    moveDetails.push({
+        fromId, toId, piece: p, capturedPiece, isEnPassant, castledSide,
+        prevCastling, prevEnPassant
+    });
+
+    const isPawnPromotion = p.toUpperCase() === 'P' && (to.row === 0 || to.row === 7);
+    if (isPawnPromotion) {
+        pendingPromotion = { fromId, toId, row: to.row, col: to.col, pieceColor: p === 'P' ? 'white' : 'black' };
+        showPromotionModal();
+    } else {
+        recordMoveText(fromId, toId, p, capturedPiece !== ' ');
+        completeTurnSwitch();
+    }
+}
+
+function recordMoveText(fromId, toId, piece, isCapture) {
+    let pName = piece.toUpperCase();
+    if (pName === 'P') pName = '';
+    let captureSymbol = isCapture ? 'x' : '';
+    let moveNotation = `${pName}${captureSymbol}${toId}`;
+    if (piece.toUpperCase() === 'P' && isCapture) {
+        moveNotation = fromId[0] + 'x' + toId;
+    }
+
+    if (currentTurn === 'white') {
+        moveHistory.push(`${moveNumber}. ${moveNotation}`);
+    } else {
+        moveHistory[moveHistory.length - 1] += ` ${moveNotation}`;
+        moveNumber++;
+    }
+    updateMovesListDOM();
+}
+
+function updateMovesListDOM() {
+    const scrollContainer = movesList.querySelector('.moves-scroll') || movesList;
+    const existingBtn = scrollContainer.querySelector('button');
+    scrollContainer.innerHTML = moveHistory.map(m => `<div>${m}</div>`).join('');
+    if (existingBtn) scrollContainer.appendChild(existingBtn);
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+}
+
+// --- CIERRE DE TURNO Y VALIDACIÓN DE MATE/AHOGADO ---
+function completeTurnSwitch() {
+    selectedSquare = null;
+    selectedPiece = null;
+    currentTurn = currentTurn === 'white' ? 'black' : 'white';
+    
+    const legalMoves = countLegalMoves(currentTurn);
+    const inCheck = isKingInCheck(currentTurn, initialBoard);
+
+    if (legalMoves === 0) {
+        stopTimer();
+        if (inCheck) {
+            const winner = currentTurn === 'white' ? 'Negras' : 'Blancas';
+            // ACTUALIZADO: Texto exacto en mayúsculas para el fin de la partida
+            turnDisplay.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">¡JAQUE MAQUE! Ganan las ${winner}</span>`;
+            currentTurn = 'gameOver';
+            updateDOM(); // Renderizamos para que el rey quede en rojo bajo el mate
+            setTimeout(() => { alert(`¡JAQUE MAQUE! La partida ha terminado. Ganador: ${winner}`); }, 250);
+            return;
+        } else {
+            turnDisplay.innerHTML = `<span style="color: gray; font-weight: bold;">¡TABLAS POR AHOGADO! Empate</span>`;
+            currentTurn = 'gameOver';
+            updateDOM();
+            setTimeout(() => { alert('¡Tablas por Ahogado! Ningún jugador tiene movimientos legales. Empate.'); }, 250);
+            return;
+        }
+    }
+
+    // ACTUALIZADO: Texto exacto en mayúsculas cuando el rey es amenazado ordinariamente
+    if (inCheck) {
+        const kingName = currentTurn === 'white' ? 'BLANCAS' : 'NEGRAS';
+        turnDisplay.innerHTML = `Turno: ${currentTurn === 'white' ? 'Blancas' : 'Negras'} <span style="color: #e74c3c; font-weight: bold;">¡JAQUE AL REY ${kingName}! ⚠️</span>`;
+    } else {
+        turnDisplay.textContent = `Turno: ${currentTurn === 'white' ? 'Blancas' : 'Negras'}`;
+    }
+    
+    updateDOM(); // Redibuja el tablero limpio incluyendo marcas de rastro estables
+    switchTimer();
+}
+
+function undoMove() {
+    if (moveDetails.length === 0 || currentTurn === 'gameOver') return;
+    stopTimer();
+    const last = moveDetails.pop();
+
+    const from = idToCoords(last.fromId);
+    const to = idToCoords(last.toId);
+
+    initialBoard[from.row][from.col] = last.piece;
+    initialBoard[to.row][to.col] = ' ';
+
+    if (last.capturedPiece !== ' ') {
+        if (last.isEnPassant) {
+            const direction = last.piece === 'P' ? -1 : 1;
+            initialBoard[to.row - direction][to.col] = last.capturedPiece;
+        } else {
+            initialBoard[to.row][to.col] = last.capturedPiece;
+        }
+    }
+
+    if (last.castledSide) {
+        if (last.castledSide === 'kingside') {
+            initialBoard[from.row][7] = initialBoard[from.row][5];
+            initialBoard[from.row][5] = ' ';
+        } else if (last.castledSide === 'queenside') {
+            initialBoard[from.row][0] = initialBoard[from.row][3];
+            initialBoard[from.row][3] = ' ';
+        }
+    }
+
+    castlingRights = last.prevCastling;
+    enPassantTarget = last.prevEnPassant;
+
+    if (currentTurn === 'white') {
+        moveNumber--;
+        moveHistory.pop();
+    } else {
+        const lastIndex = moveHistory.length - 1;
+        const parts = moveHistory[lastIndex].split(' ');
+        if (parts.length > 2) {
+            moveHistory[lastIndex] = parts[0] + ' ' + parts[1];
+        } else {
+            moveHistory.pop();
+        }
+    }
+
+    currentTurn = last.piece === last.piece.toUpperCase() ? 'white' : 'black';
+    turnDisplay.textContent = `Turno: ${currentTurn === 'white' ? 'Blancas' : 'Negras'}`;
+    selectedSquare = null;
+    selectedPiece = null;
+
+    updateDOM();
+    updateMovesListDOM();
+
+    if (moveDetails.length > 0) undoButton.disabled = false;
+    else undoButton.disabled = true;
+
+    startTimerLogic();
+}
+
+function showPromotionModal() { promotionModal.style.display = 'flex'; }
+function hidePromotionModal() { promotionModal.style.display = 'none'; }
+
+function handlePromotion(pieceCode) {
+    if (!pendingPromotion) return;
+    const { row, col, pieceColor, fromId, toId } = pendingPromotion;
+    const finalPiece = pieceColor === 'white' ? pieceCode.toUpperCase() : pieceCode.toLowerCase();
+    initialBoard[row][col] = finalPiece;
+
+    const lastMoveDetail = moveDetails[moveDetails.length - 1];
+    let isCap = lastMoveDetail ? lastMoveDetail.capturedPiece !== ' ' : false;
+
+    recordMoveText(fromId, toId, finalPiece, isCap);
+    hidePromotionModal();
+    pendingPromotion = null;
+    completeTurnSwitch();
+}
+
+function startTimerLogic() {
     timerInterval = setInterval(() => {
-        if (runningPlayer === 'white') {
+        if (currentTurn === 'white') {
             whiteTimeLeft--;
             whiteTimerDisplay.textContent = formatTime(whiteTimeLeft);
-            if (whiteTimeLeft <= 0) endGame('black');
+            if (whiteTimeLeft <= 0) endGame('Negras');
         } else {
             blackTimeLeft--;
             blackTimerDisplay.textContent = formatTime(blackTimeLeft);
-            if (blackTimeLeft <= 0) endGame('white');
+            if (blackTimeLeft <= 0) endGame('Blancas');
         }
     }, 1000);
 }
 
-function switchTurnState() {
-    updateTurnDisplay();
-    
-    if (gameStarted) {
-        startButton.disabled = true;
-        undoButton.disabled = false;
-    }
-
+function switchTimer() {
+    clearInterval(timerInterval);
     if (currentTurn === 'white') {
-        whiteButton.disabled = false;
-        blackButton.disabled = true;
+        whiteButton.disabled = false; blackButton.disabled = true;
     } else {
-        whiteButton.disabled = true;
-        blackButton.disabled = false;
+        whiteButton.disabled = true; blackButton.disabled = false;
     }
-    
-    updateTimer();
+    startTimerLogic();
+    undoButton.disabled = false;
 }
 
-function completeTurnSwitch() {
-    currentTurn = (currentTurn === 'white') ? 'black' : 'white';
-    updateDOM();
-    switchTurnState();
-}
-
-// ===========================================
-//         LÓGICA DEL REGISTRO DE JUGADAS
-// ===========================================
-
-function renderMoveHistory() {
-    movesList.innerHTML = '';
-    
-    moveHistory.forEach(move => {
-        const entry = document.createElement('div');
-        entry.classList.add('move-entry');
-        
-        entry.innerHTML = `
-            <span class="move-number">${move.number}.</span>
-            <span class="move-white">${move.white}</span>
-            <span class="move-black">${move.black}</span>
-        `;
-        movesList.appendChild(entry);
-    });
-    
-    movesList.scrollTop = 0;
-}
-
-// ===========================================
-//         FUNCIONES PARA RETROCEDER JUGADA
-// ===========================================
-
-function undoMove() {
-    if (!gameStarted || moveHistory.length === 0 || currentTurn === 'gameOver') {
-        return;
-    }
-    
-    if (timerInterval) clearInterval(timerInterval);
-    
-    const lastMoveIndex = moveHistory.length - 1;
-    const lastMove = moveHistory[lastMoveIndex];
-    
-    if (currentTurn === 'white') {
-        if (lastMove.black) {
-            undoLastMove('black', lastMoveIndex);
-            lastMove.black = '';
-            currentTurn = 'black';
-        } else {
-            undoLastMove('white', lastMoveIndex);
-            moveHistory.pop();
-            moveDetails.pop();
-            moveNumber--;
-            currentTurn = 'white';
-        }
-    } else {
-        if (lastMove.white) {
-            undoLastMove('white', lastMoveIndex);
-            lastMove.white = '';
-            currentTurn = 'white';
-        }
-    }
-    
-    if (moveHistory.length > 0) {
-        const currentLastMove = moveHistory[moveHistory.length - 1];
-        if (!currentLastMove.white && !currentLastMove.black) {
-            moveHistory = [];
-            moveDetails = [];
-            moveNumber = 1;
-            currentTurn = 'white';
-            resetCastlingRights();
-            enPassantTarget = null;
-        }
-    } else {
-        moveHistory = [];
-        moveDetails = [];
-        moveNumber = 1;
-        currentTurn = 'white';
-        resetCastlingRights();
-        enPassantTarget = null;
-    }
-    
-    updateDOM();
-    renderMoveHistory();
-    switchTurnState();
-}
-
-function undoLastMove(color, moveIndex) {
-    const moveDetail = moveDetails[moveIndex];
-    const moveNotation = color === 'white' ? moveHistory[moveIndex].white : moveHistory[moveIndex].black;
-    
-    if (moveNotation === 'O-O') {
-        undoKingsideCastling(color);
-    } else if (moveNotation === 'O-O-O') {
-        undoQueensideCastling(color);
-    } else if (moveNotation.includes('e.p.')) {
-        // Revertir peón al paso
-        undoEnPassant(moveNotation, moveDetail, color);
-    } else {
-        undoNormalMove(moveNotation, moveDetail, color);
-    }
-    
-    // Restaurar derechos de enroque
-    if (moveDetail.castlingRights) {
-        if (color === 'white') {
-            castlingRights.white = {...moveDetail.castlingRights.white};
-        } else {
-            castlingRights.black = {...moveDetail.castlingRights.black};
-        }
-    }
-    
-    // Restaurar objetivo de peón al paso
-    if (moveDetail.enPassantTarget) {
-        enPassantTarget = moveDetail.enPassantTarget;
-    }
-}
-
-function undoNormalMove(moveNotation, moveDetail, color) {
-    const sourceId = moveNotation.substring(0, 2);
-    const targetId = moveNotation.substring(2, 4);
-    const [startRow, startCol] = idToCoords(sourceId);
-    const [endRow, endCol] = idToCoords(targetId);
-    
-    boardState[startRow][startCol] = moveDetail.piece;
-    boardState[endRow][endCol] = moveDetail.capturedPiece || '';
-}
-
-function undoEnPassant(moveNotation, moveDetail, color) {
-    const sourceId = moveNotation.substring(0, 2);
-    const targetId = moveNotation.substring(2, 4);
-    const [startRow, startCol] = idToCoords(sourceId);
-    const [endRow, endCol] = idToCoords(targetId);
-    
-    // Restaurar peón que se movió
-    boardState[startRow][startCol] = moveDetail.piece;
-    boardState[endRow][endCol] = '';
-    
-    // Restaurar peón capturado (que estaba en la fila inicial)
-    const capturedPawnRow = startRow;
-    const capturedPawnCol = endCol;
-    boardState[capturedPawnRow][capturedPawnCol] = moveDetail.capturedPiece;
-}
-
-function undoKingsideCastling(color) {
-    if (color === 'white') {
-        boardState[7][4] = 'K';
-        boardState[7][7] = 'R';
-        boardState[7][6] = '';
-        boardState[7][5] = '';
-    } else {
-        boardState[0][4] = 'k';
-        boardState[0][7] = 'r';
-        boardState[0][6] = '';
-        boardState[0][5] = '';
-    }
-}
-
-function undoQueensideCastling(color) {
-    if (color === 'white') {
-        boardState[7][4] = 'K';
-        boardState[7][0] = 'R';
-        boardState[7][2] = '';
-        boardState[7][3] = '';
-    } else {
-        boardState[0][4] = 'k';
-        boardState[0][0] = 'r';
-        boardState[0][2] = '';
-        boardState[0][3] = '';
-    }
-}
-
-function resetCastlingRights() {
-    castlingRights = {
-        white: { kingside: true, queenside: true },
-        black: { kingside: true, queenside: true }
-    };
-}
-
-// ===========================================
-//      ACTUALIZACIÓN DEL DOM Y EVENTOS
-// ===========================================
-
-function updateDOM() {
-    for (let row = 0; row < boardSize; row++) {
-        for (let col = 0; col < boardSize; col++) {
-            const id = coordsToId(row, col);
-            const squareElement = document.getElementById(id);
-            const pieceCode = boardState[row][col];
-            
-            if (pieceCode) {
-                const pieceColor = getPieceColor(pieceCode);
-                const colorClass = pieceColor === 'white' ? 'piece-white' : 'piece-black';
-                squareElement.innerHTML = `<span class="piece ${colorClass}">${PIECES[pieceCode]}</span>`;
-            } else {
-                squareElement.innerHTML = '';
-            }
-        }
-    }
-    updateTurnDisplay();
-}
-
-function handleSquareClick(event) {
-    if (!gameStarted || currentTurn === 'gameOver') return;
-
-    const clickedSquare = event.currentTarget;
-    const [endRow, endCol] = idToCoords(clickedSquare.id);
-    const targetPieceCode = getPieceCode(endRow, endCol);
-
-    // --- LÓGICA DE SELECCIÓN (Primer Clic) ---
-    if (!selectedSquare) {
-        const piece = getPieceCode(endRow, endCol);
-        if (piece) {
-            const pieceColor = getPieceColor(piece);
-            
-            if (pieceColor !== currentTurn) return;
-
-            selectedSquare = clickedSquare;
-            selectedPiece = piece;
-            selectedSquare.classList.add('selected');
-        }
-    } 
-    // --- LÓGICA DE MOVIMIENTO (Segundo Clic) ---
-    else {
-        const [startRow, startCol] = idToCoords(selectedSquare.id);
-        
-        if (clickedSquare === selectedSquare) {
-            selectedSquare.classList.remove('selected');
-            selectedSquare = null;
-            selectedPiece = null;
-            return;
-        }
-        
-        // Clic en pieza propia: re-seleccionar
-        if (getPieceColor(targetPieceCode) === currentTurn) {
-            selectedSquare.classList.remove('selected');
-            selectedSquare = clickedSquare;
-            selectedPiece = targetPieceCode;
-            selectedSquare.classList.add('selected');
-            return;
-        }
-
-        // VALIDAR el movimiento
-        if (isValidMove(selectedPiece, [startRow, startCol], [endRow, endCol])) {
-            
-            // --- GUARDAR INFORMACIÓN PARA DESHACER ---
-            const capturedPiece = boardState[endRow][endCol];
-            const moveDetail = {
-                piece: selectedPiece,
-                capturedPiece: capturedPiece,
-                castlingRights: {
-                    white: {...castlingRights.white},
-                    black: {...castlingRights.black}
-                },
-                enPassantTarget: enPassantTarget ? {...enPassantTarget} : null
-            };
-            
-            // --- REGISTRO DE JUGADA ---
-            const sourceId = selectedSquare.id;
-            const targetId = clickedSquare.id;
-            
-            let moveNotation;
-            let isEnPassant = false;
-            
-            // Verificar tipo de movimiento especial
-            if (selectedPiece.toUpperCase() === 'K' && Math.abs(startCol - endCol) === 2) {
-                moveNotation = (endCol > startCol) ? 'O-O' : 'O-O-O';
-            } else if (isValidEnPassant(selectedPiece, [startRow, startCol], [endRow, endCol])) {
-                moveNotation = sourceId + targetId + ' e.p.';
-                isEnPassant = true;
-            } else {
-                moveNotation = sourceId + targetId;
-            }
-
-            if (currentTurn === 'white') {
-                moveHistory.push({ number: moveNumber, white: moveNotation, black: '' });
-                moveDetails.push(moveDetail);
-            } else {
-                const lastMove = moveHistory[moveHistory.length - 1];
-                lastMove.black = moveNotation;
-                moveDetails[moveHistory.length - 1] = moveDetail;
-                moveNumber++;
-            }
-            renderMoveHistory();
-
-            // EJECUTAR el movimiento
-            if (selectedPiece.toUpperCase() === 'K' && Math.abs(startCol - endCol) === 2) {
-                executeCastling(selectedPiece, [startRow, startCol], [endRow, endCol]);
-                enPassantTarget = null;
-            } else if (isEnPassant) {
-                executeEnPassant(selectedPiece, [startRow, startCol], [endRow, endCol]);
-                enPassantTarget = null;
-            } else {
-                boardState[endRow][endCol] = selectedPiece;
-                boardState[startRow][startCol] = '';
-                
-                // Actualizar derechos de enroque si se mueve rey o torre
-                updateCastlingRights(selectedPiece, [startRow, startCol]);
-                
-                // Establecer objetivo de peón al paso si un peón avanza dos casillas
-                if (selectedPiece.toUpperCase() === 'P' && Math.abs(startRow - endRow) === 2) {
-                    enPassantTarget = {
-                        row: endRow,
-                        col: endCol,
-                        color: getPieceColor(selectedPiece)
-                    };
-                } else {
-                    enPassantTarget = null;
-                }
-            }
-
-            // Limpiar la selección
-            selectedSquare.classList.remove('selected');
-            selectedSquare = null;
-            selectedPiece = null;
-            
-            // Verificar coronación de peón
-            if (checkForPromotion(boardState[endRow][endCol], [startRow, startCol], [endRow, endCol])) {
-                showPromotionModal(endRow, endCol, currentTurn);
-            } else {
-                completeTurnSwitch();
-            }
-            
-        } else {
-            // Movimiento no válido
-            selectedSquare.classList.remove('selected');
-            selectedSquare = null;
-            selectedPiece = null;
-        }
-    }
-}
-
-// ===========================================
-//         FUNCIONES DE COORDENADAS
-// ===========================================
+function stopTimer() { clearInterval(timerInterval); whiteButton.disabled = true; blackButton.disabled = true; }
+function formatTime(seconds) { const m = Math.floor(seconds / 60); const s = seconds % 60; return `${m}:${s < 10 ? '0' : ''}${s}`; }
+function endGame(winner) { stopTimer(); gameStarted = false; currentTurn = 'gameOver'; alert(`¡Tiempo agotado! El ganador es: ${winner}`); }
 
 function createCoordinates() {
-    const ranks = document.getElementById('ranks');
-    const files = document.getElementById('files');
-    
-    ranks.innerHTML = '';
-    files.innerHTML = '';
-    
-    for (let i = 8; i >= 1; i--) {
-        const rankLabel = document.createElement('div');
-        rankLabel.className = 'rank-label';
-        rankLabel.textContent = i;
-        ranks.appendChild(rankLabel);
-    }
-    
+    const ranksContainer = document.getElementById('ranks');
+    const filesContainer = document.getElementById('files');
+    ranksContainer.innerHTML = '';
+    filesContainer.innerHTML = '';
+    for (let i = 8; i >= 1; i--) { const lbl = document.createElement('div'); lbl.className = 'rank-label'; lbl.textContent = i; ranksContainer.appendChild(lbl); }
     const fileLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-    fileLetters.forEach(letter => {
-        const fileLabel = document.createElement('div');
-        fileLabel.className = 'file-label';
-        fileLabel.textContent = letter;
-        files.appendChild(fileLabel);
-    });
+    fileLetters.forEach(l => { const lbl = document.createElement('div'); lbl.className = 'file-label'; lbl.textContent = l; filesContainer.appendChild(lbl); });
 }
 
-function createBoard() {
+document.addEventListener("DOMContentLoaded", () => {
     const board = document.getElementById('chessboard');
-    
     whiteButton = document.getElementById('white-button');
     blackButton = document.getElementById('black-button');
     whiteTimerDisplay = document.getElementById('white-timer-display');
@@ -1061,68 +645,34 @@ function createBoard() {
     promotionModal = document.getElementById('promotion-modal');
     promotionOptions = document.querySelectorAll('.promotion-option');
 
-    whiteButton.addEventListener('click', () => {
-        if (timerInterval) clearInterval(timerInterval);
-        alert("Juego pausado. Pulsa OK para reanudar el tiempo de Negras.");
-        updateTimer();
-    });
-    blackButton.addEventListener('click', () => {
-        if (timerInterval) clearInterval(timerInterval);
-        alert("Juego pausado. Pulsa OK para reanudar el tiempo de Blancas.");
-        updateTimer();
-    });
-
     startButton.addEventListener('click', () => {
         if (!gameStarted) {
-            gameStarted = true;
-            switchTurnState();
+            gameStarted = true; startButton.disabled = true; startButton.style.opacity = '0.6';
+            switchTimer();
         }
     });
 
     undoButton.addEventListener('click', undoMove);
-
-    promotionOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            const pieceCode = option.getAttribute('data-piece');
+    promotionOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+            const pieceCode = opt.getAttribute('data-piece');
             handlePromotion(pieceCode);
         });
-    });
-
-    window.addEventListener('click', (event) => {
-        if (event.target === promotionModal) {
-            hidePromotionModal();
-            if (pendingPromotion) {
-                completeTurnSwitch();
-            }
-        }
     });
 
     for (let row = 0; row < boardSize; row++) {
         for (let col = 0; col < boardSize; col++) {
             const square = document.createElement('div');
             square.classList.add('square');
-            
             const isLight = (row + col) % 2 === 0;
             square.classList.add(isLight ? 'light' : 'dark');
-            
-            const id = coordsToId(row, col);
-            square.id = id;
-
+            square.id = coordsToId(row, col);
             square.addEventListener('click', handleSquareClick);
             board.appendChild(square);
         }
     }
-    
     createCoordinates();
-    
     updateDOM();
     whiteTimerDisplay.textContent = formatTime(whiteTimeLeft);
     blackTimerDisplay.textContent = formatTime(blackTimeLeft);
-    
-    whiteButton.disabled = true;
-    blackButton.disabled = true;
-    undoButton.disabled = true;
-}
-
-// Iniciar el juego al cargar el script
-document.addEventListener('DOMContentLoaded', createBoard);
+});

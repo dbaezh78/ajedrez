@@ -652,3 +652,35 @@ button:focus-visible {
         -webkit-tap-highlight-color: transparent;
     }
 }
+
+
+/* Indicador sutil para las jugadas posibles */
+.possible-move {
+    position: relative;
+}
+
+.possible-move::after {
+    content: "";
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.15); /* Círculo gris suave */
+    border-radius: 50%;
+    pointer-events: none; /* No interfiere con los clics */
+    z-index: 2;
+}
+
+/* Si la casilla destino contiene una pieza enemiga, dibujamos un anillo de captura en lugar de un punto */
+.possible-move:has(img)::after {
+    width: 85%;
+    height: 85%;
+    background-color: transparent;
+    border: 4px solid rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+}
+
+/* Color rojo intenso de alerta para cuando el Rey está en jaque */
+.king-in-check {
+    background-color: #e74c3c !important; /* Rojo sutil/intenso que resalta sobre las casillas */
+    box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.8);
+}

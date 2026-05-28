@@ -32,10 +32,8 @@
 
         <div class="controls">
             <div class="btn-group">
-                <button onclick="undoMove()">⟵ Atrás</button>
-                <button onclick="redoMove()">Adelante ⟶</button>
-                
-                
+                <button onclick="undoMove()">← <br>Atrás</button>
+                <button onclick="redoMove()">Adelante<br> →</button>                
             </div>
 
             <div class="color-selector">
@@ -43,7 +41,7 @@
         <input type="checkbox" id="colorToggle" onchange="toggleOrientation()">
         <span class="slider"></span>
     </label>
-    <span id="colorLabel">Jugando con las: <b>Blancas</b></span>
+    <span id="colorLabel">Jugando con: <b>Blancas</b></span>
 </div>
 
             <textarea id="notes" placeholder="Tus apuntes..."></textarea>
