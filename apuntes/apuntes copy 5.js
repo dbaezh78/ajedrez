@@ -42,23 +42,6 @@ window.onload = async () => {
     
     renderBoard();
     moveImages.push(await captureBoardState());
-
-    // LOGICA POR DEFECTO: Intentar recuperar la última carpeta usada de forma automática
-    try {
-        const storedHandle = await getStoredDirectoryHandle();
-        if (storedHandle) {
-            // Verificamos si el navegador conserva el permiso de lectura para esa carpeta
-            const options = { mode: 'readwrite' };
-            if (await storedHandle.queryPermission(options) === 'granted') {
-                await loadFilesFromHandle(storedHandle);
-            } else {
-                // Si requiere re-confirmación visual sutil, dejamos un aviso en consola
-                console.log("Se requiere interacción para reactivar los permisos del directorio guardado.");
-            }
-        }
-    } catch (err) {
-        console.error("No se pudo cargar el directorio automático:", err);
-    }
 };
 
 async function captureBoardState() {
@@ -113,6 +96,7 @@ function updateLabels(isBlack) {
 }
 
 async function handleSquareClick(square) {
+    // Bloquear si estamos revisando jugadas viejas en modo visor
     if (currentPointer < moveHistoryFEN.length - 1) return;
 
     if (selectedSquare) {
@@ -133,6 +117,7 @@ async function handleSquareClick(square) {
             renderBoard();
             moveImages.push(await captureBoardState());
             
+            // Sincronizar FEN para los botones en caliente
             moveHistoryFEN.push(game.fen());
             lastMoveHistory.push({ from: move.from, to: move.to });
             currentPointer = moveHistoryFEN.length - 1;
@@ -187,8 +172,10 @@ function toggleOrientation() {
     renderBoard();
 }
 
+// --- BOTONES ATRÁS/ADELANTE DUALES (Manejan deshacer clásico y navegación de cargados) ---
 function undoMove() {
     if (moveHistoryFEN.length > 1 && currentPointer === moveHistoryFEN.length - 1) {
+        // Modo Juego Clásico: Deshacer jugada real
         const move = game.undo();
         if(move) {
             moveImages.pop();
@@ -213,6 +200,7 @@ function undoMove() {
             renderBoard();
         }
     } else if (currentPointer > 0) {
+        // Modo Visor: Navegar hacia atrás en archivo cargado
         currentPointer--;
         game.load(moveHistoryFEN[currentPointer]);
         lastMove = lastMoveHistory[currentPointer];
@@ -221,6 +209,7 @@ function undoMove() {
 }
 
 function redoMove() {
+    // Modo Visor: Avanzar hacia adelante en archivo cargado
     if (currentPointer < moveHistoryFEN.length - 1) {
         currentPointer++;
         game.load(moveHistoryFEN[currentPointer]);
@@ -229,6 +218,7 @@ function redoMove() {
     }
 }
 
+// --- CARGADOR INDIVIDUAL ORIGINAL INDEPENDIENTE ---
 function loadSavedGame(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -239,39 +229,31 @@ function loadSavedGame(event) {
     reader.readAsText(file);
 }
 
-// --- LOGICA MODIFICADA: ESCANEO Y GUARDADO PERSISTENTE ---
+// --- NUEVO: ESCANEAR MODAL DE LA CARPETA LOCAL "Misapuntes" ---
 async function selectNotesFolder() {
     if (!window.showDirectoryPicker) { alert("Tu navegador no soporta lectura de carpetas locales. Usa Chrome o Edge."); return; }
     try {
         const directoryHandle = await window.showDirectoryPicker();
-        
-        // Almacenamos este puntero en la base de datos interna para abrirlo solo la próxima vez
-        await storeDirectoryHandle(directoryHandle);
-        
-        // Procesamos la lectura de los archivos .txt de forma regular
-        await loadFilesFromHandle(directoryHandle);
+        const listBox = document.getElementById('gamesListBox');
+        listBox.innerHTML = ""; 
+        indexedFiles = {};       
+
+        for await (const entry of directoryHandle.values()) {
+            if (entry.kind === 'file' && entry.name.endsWith('.txt')) {
+                const option = document.createElement('option');
+                option.value = entry.name;
+                option.textContent = entry.name;
+                listBox.appendChild(option);
+                indexedFiles[entry.name] = entry; 
+            }
+        }
+        if (listBox.options.length === 0) alert("No se encontraron archivos .txt en esa carpeta.");
     } catch (err) {
         console.error(err);
     }
 }
 
-// Procesa e inyecta los archivos del DirectoryHandle dentro del ListBox
-async function loadFilesFromHandle(directoryHandle) {
-    const listBox = document.getElementById('gamesListBox');
-    listBox.innerHTML = ""; 
-    indexedFiles = {};       
-
-    for await (const entry of directoryHandle.values()) {
-        if (entry.kind === 'file' && entry.name.endsWith('.txt')) {
-            const option = document.createElement('option');
-            option.value = entry.name;
-            option.textContent = entry.name;
-            listBox.appendChild(option);
-            indexedFiles[entry.name] = entry; 
-        }
-    }
-}
-
+// --- NUEVO: CARGAR JUEGO SELECCIONADO DESDE EL LISTBOX ---
 async function loadSelectedGameFromList() {
     const selectedFileName = document.getElementById('gamesListBox').value;
     if (!selectedFileName || !indexedFiles[selectedFileName]) return;
@@ -285,8 +267,11 @@ async function loadSelectedGameFromList() {
     }
 }
 
+// --- INTERPRETE DE REPASO: Lee tanto texto limpio como anotaciones FEN ---
 function parseAndLoadTextGame(text, filename) {
     document.getElementById('notes').value = text;
+    
+    // Tratamos de ver si el archivo tiene un árbol JSON interactivo empaquetado, si no, cargamos modo básico
     try {
         if (text.trim().startsWith('{')) {
             const data = JSON.parse(text);
@@ -294,6 +279,7 @@ function parseAndLoadTextGame(text, filename) {
             moveHistoryFEN = data.historyFEN || [game.fen()];
             lastMoveHistory = data.historyMoves || [{ from: null, to: null }];
         } else {
+            // Si es un archivo txt tradicional de notas, cargamos el PGN si existe
             game.reset();
             moveHistoryFEN = [game.fen()];
             lastMoveHistory = [{ from: null, to: null }];
@@ -321,6 +307,7 @@ function parseAndLoadTextGame(text, filename) {
     renderBoard();
 }
 
+// --- TU FUNCIÓN DE GUARDADO CLÁSICA DIRECTA A DIRECTORIO INTACTA ---
 async function finishGame() {
     if (!window.showDirectoryPicker) { alert("Usa Chrome/Edge para guardar."); return; }
     try {
@@ -329,6 +316,7 @@ async function finishGame() {
         const folderName = `${playerName}_${counter}`;
         const subFolder = await handle.getDirectoryHandle(folderName, { create: true });
 
+        // También incluimos el árbol interactivo en el txt por si quieres cargarlo en el ListBox después
         const txtFile = await subFolder.getFileHandle(`${folderName}.txt`, { create: true });
         const writableTxt = await txtFile.createWritable();
         
@@ -353,38 +341,6 @@ async function finishGame() {
         localStorage.setItem('chessCounter', parseInt(counter) + 1);
         alert("Guardado exitoso en la carpeta: " + folderName);
     } catch (err) { console.error(err); }
-}
-
-// --- MOTOR BASE DE DATOS DE INDEXEDDB PARA GUARDAR EL ACCESO A LA CARPETA ---
-function getDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("ChessNotesFolderDB", 1);
-        request.onupgradeneeded = e => {
-            e.target.result.createObjectStore("folders");
-        };
-        request.onsuccess = e => resolve(e.target.result);
-        request.onerror = e => reject(e.target.error);
-    });
-}
-
-async function storeDirectoryHandle(handle) {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction("folders", "readwrite");
-        tx.objectStore("folders").put(handle, "defaultFolder");
-        tx.oncomplete = () => resolve();
-        tx.onerror = e => reject(tx.error);
-    });
-}
-
-async function getStoredDirectoryHandle() {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction("folders", "readonly");
-        const request = tx.objectStore("folders").get("defaultFolder");
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = e => reject(tx.error);
-    });
 }
 
 window.addEventListener('resize', drawArrow);

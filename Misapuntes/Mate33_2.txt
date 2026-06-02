@@ -1,0 +1,15 @@
+NOTAS:
+1. d4 d5
+2. e4 dxe4
+3. Nc3 Nf6
+4. f3 exf3
+5. Qxf3 Qxd4
+6. Be3 Qb4
+7. O-O-O Bg4
+8. Nb5 e5
+9. Nxc7+ Ke7
+10. Qxb7 Qxb7
+11. Bc5#
+
+PGN:
+1. d4 d5 2. e4 dxe4 3. Nc3 Nf6 4. f3 exf3 5. Qxf3 Qxd4 6. Be3 Qb4 7. O-O-O Bg4 8. Nb5 e5 9. Nxc7+ Ke7 10. Qxb7 Qxb7 11. Bc5#

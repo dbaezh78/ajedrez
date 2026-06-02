@@ -6,6 +6,8 @@
 {"nombre": "dbAJ_1", "sub": "", "totalMovs": 0},
 {"nombre": "JaqueLegal", "sub": "JaqueLegalX_2", "totalMovs": 16},
 {"nombre": "Jugador_17", "sub": "", "totalMovs": 0},
+{"nombre": "Lab", "sub": "Jugador_2", "totalMovs": 6},
+{"nombre": "MateCaballo", "sub": "Mate33_2", "totalMovs": 22},
 {"nombre": "MateLegal_1", "sub": "Opc1", "totalMovs": 16},
 {"nombre": "MateReyna", "sub": "Jugada1_18", "totalMovs": 29},
 {"nombre": "MiJaquedb", "sub": "Jugadordb_4", "totalMovs": 25} 

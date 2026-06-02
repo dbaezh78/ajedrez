@@ -48,12 +48,6 @@
                 <input type="file" id="loadFile" accept=".txt" onchange="loadSavedGame(event)">
             </div>
 
-            <div class="folder-list-container">
-                <button onclick="selectNotesFolder()" class="folder-btn">📁 Seleccionar Carpeta Misapuntes</button>
-                <div class="listbox-title">Partidas en la carpeta:</div>
-                <select id="gamesListBox" size="4" class="games-listbox" onchange="loadSelectedGameFromList()"></select>
-            </div>
-
             <textarea id="notes" placeholder="Tus apuntes..."></textarea>
             
             <button id="finishBtn" onclick="finishGame()">Terminar y Guardar Todo</button>

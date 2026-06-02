@@ -1,0 +1,44 @@
+{
+  "player": "Jugador",
+  "notes": "1. e4 d5\n2. d4 e5\n3. f4 f5",
+  "pgn": "1. e4 d5 2. d4 e5 3. f4 f5",
+  "historyFEN": [
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2",
+    "rnbqkbnr/ppp1pppp/8/3p4/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2",
+    "rnbqkbnr/ppp2ppp/8/3pp3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq e6 0 3",
+    "rnbqkbnr/ppp2ppp/8/3pp3/3PPP2/8/PPP3PP/RNBQKBNR b KQkq f3 0 3",
+    "rnbqkbnr/ppp3pp/8/3ppp2/3PPP2/8/PPP3PP/RNBQKBNR w KQkq f6 0 4"
+  ],
+  "historyMoves": [
+    {
+      "from": null,
+      "to": null
+    },
+    {
+      "from": "e2",
+      "to": "e4"
+    },
+    {
+      "from": "d7",
+      "to": "d5"
+    },
+    {
+      "from": "d2",
+      "to": "d4"
+    },
+    {
+      "from": "e7",
+      "to": "e5"
+    },
+    {
+      "from": "f2",
+      "to": "f4"
+    },
+    {
+      "from": "f7",
+      "to": "f5"
+    }
+  ]
+}
