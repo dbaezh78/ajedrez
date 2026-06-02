@@ -1,43 +1,36 @@
 @echo off
 setlocal enabledelayedexpansion
-set "jsonFile=carpetas.json"
+set "jsonFile=partidas.json"
 
 echo { > "%jsonFile%"
 echo   "partidas": [ >> "%jsonFile%"
 
 set "first=1"
 
-:: Recorremos las carpetas principales
-for /d %%D in (*) do (
-    set "subfolder="
-    set "movimientos=0"
+:: Usamos 'dir' filtrado para obligar al script a leer SOLO archivos reales .txt (ignorando carpetas y basura)
+for /f "delims=" %%F in ('dir /b /a:-d *.txt 2^>nul') do (
+    set "nombreArchivo=%%~nF"
     
-    :: Entramos en la carpeta para buscar la subcarpeta de la jugada
-    for /d %%S in ("%%~D\*") do (
-        set "subfolder=%%~nS"
-        set "count=0"
-        :: Contamos los movimientos dentro de la subcarpeta
-        for %%F in ("%%~D\!subfolder!\movimiento_*.png") do (
-            set /a count+=1
+    :: Evitamos de forma estricta que el script intente indexarse a sí mismo o al JSON si coincide la extensión
+    if /i not "!nombreArchivo!"=="partidas" (
+        if /i not "!nombreArchivo!"=="Generar" (
+            
+            :: Manejo perfecto de la coma de separación de la estructura JSON
+            if !first! equ 0 (
+                echo ,>> "%jsonFile%"
+            )
+            
+            :: Escribimos la línea limpia del objeto JSON
+            <nul set /p ="    {"nombre": "!nombreArchivo!", "sub": "Interactiva", "totalMovs": 0}" >> "%jsonFile%"
+            set "first=0"
         )
-        set "movimientos=!count!"
     )
-
-    :: Manejo de la coma para que el JSON no se rompa
-    if !first! equ 0 (
-        echo ,>> "%jsonFile%"
-    )
-    
-    :: Escribimos la línea del objeto JSON con comillas seguras
-    <nul set /p ="    {"nombre": "%%~nD", "sub": "!subfolder!", "totalMovs": !movimientos!}" >> "%jsonFile%"
-    set "first=0"
 )
 
-:: Terminamos el JSON correctamente
+:: Cerramos el archivo JSON de forma limpia
 echo. >> "%jsonFile%"
 echo   ] >> "%jsonFile%"
 echo } >> "%jsonFile%"
 
-echo.
-echo Proceso terminado. JSON actualizado con exito.
+echo ¡Listo, Carlos! %jsonFile% generado exclusivamente con tus archivos de texto .txt reales.
 pause

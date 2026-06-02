@@ -1,0 +1,16 @@
+{ 
+  "partidas": [ 
+{"nombre": "1_2", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "dbAJ_1", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "JaqueLegalX_2", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugada1_18", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugada_JugadorTeyna", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugadordb_3", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugadordb_4", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugador_17", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Jugador_23", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Mate2_1", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "Mate33_2", "sub": "Interactiva", "totalMovs": 0},
+{"nombre": "MateLegal_1", "sub": "Interactiva", "totalMovs": 0} 
+  ] 
+} 

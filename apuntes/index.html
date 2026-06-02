@@ -49,8 +49,18 @@
             </div>
 
             <div class="folder-list-container">
-                <button onclick="selectNotesFolder()" class="folder-btn">📁 Seleccionar Carpeta Misapuntes</button>
-                <div class="listbox-title">Partidas en la carpeta:</div>
+                <div class="source-selector">
+                    <label class="radio-label">
+                        <input type="radio" name="sourceOrigin" value="local" checked onchange="handleSourceChange()"> 💻 Local
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="sourceOrigin" value="web" onchange="handleSourceChange()"> 🌐 Web
+                    </label>
+                </div>
+
+                <button id="actionSourceBtn" onclick="selectNotesFolder()" class="folder-btn">📁 Seleccionar Carpeta Misapuntes</button>
+                
+                <div class="listbox-title" id="listboxTitleDisplay">Partidas en la carpeta:</div>
                 <select id="gamesListBox" size="4" class="games-listbox" onchange="loadSelectedGameFromList()"></select>
             </div>
 
