@@ -1,0 +1,24 @@
+{
+  "player": "Jugador",
+  "notes": "1. d4 e5",
+  "pgn": "1. d4 e5",
+  "historyFEN": [
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
+    "rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 2"
+  ],
+  "historyMoves": [
+    {
+      "from": null,
+      "to": null
+    },
+    {
+      "from": "d2",
+      "to": "d4"
+    },
+    {
+      "from": "e7",
+      "to": "e5"
+    }
+  ]
+}
