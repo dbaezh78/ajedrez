@@ -1,0 +1,12 @@
+Reporte: 1_2
+
+Apuntes:
+ e4
+1. e5 f4
+2. f5 exf5
+3. exf4 Nf3
+4. Nf6 Ng5
+5. Ne4
+
+PGN:
+1. e4 e5 2. f4 f5 3. exf5 exf4 4. Nf3 Nf6 5. Ng5 Ne4

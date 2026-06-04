@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="../favicon.ico">
+    <title>Ajedrez Pro - David</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h2 id="playerNameDisplay">Partida de: </h2>
+    
+    <div class="game-container">
+        <div class="board-wrapper">
+            <div class="ranks"><div>8</div><div>7</div><div>6</div><div>5</div><div>4</div><div>3</div><div>2</div><div>1</div></div>
+            <div id="board">
+                <svg id="arrowLayer" style="position: absolute; top:0; left:0; width:800px; height:800px; pointer-events: none;">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="white" fill-opacity="0.6" />
+                        </marker>
+                    </defs>
+                    <line id="arrowLine" x1="0" y1="0" x2="0" y2="0" stroke="white" stroke-width="6" opacity="0.6" marker-end="url(#arrowhead)"/>
+                </svg>
+            </div>
+            <div style="grid-column: 2;"></div>
+            <div class="files"><div>a</div><div>b</div><div>c</div><div>d</div><div>e</div><div>f</div><div>g</div><div>h</div></div>
+        </div>
+
+        <div class="controls">
+            <div class="btn-group">
+                <button onclick="undoMove()">← <br>Atrás</button>
+                <button onclick="redoMove()">Adelante<br> →</button>                
+            </div>
+
+            <div class="color-selector">
+                <label class="switch">
+                    <input type="checkbox" id="colorToggle" onchange="toggleOrientation()">
+                    <span class="slider"></span>
+                </label>
+                <span id="colorLabel">Jugando con: <b>Blancas</b></span>
+            </div>
+
+            <div class="load-container">
+                <label for="loadFile" class="load-label">📂 Cargar Partida Guardada</label>
+                <input type="file" id="loadFile" accept=".txt" onchange="loadSavedGame(event)">
+            </div>
+
+            <textarea id="notes" placeholder="Tus apuntes..."></textarea>
+            
+            <button id="finishBtn" onclick="finishGame()">Terminar y Guardar Todo</button>
+            
+            <button onclick="window.location.href='../index.html'" 
+                    style="background-color: #7f8c8d; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%;">
+                Volver al Menú
+            </button>
+        </div>
+    </div>
+
+    <script src="apuntes.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+Reporte: dbAJ_1
+
+Apuntes:
+ e4
+1. e5 Nf3
+2. Nc6 Nc3
+3. Nf6 Nb5
+4. Bc5 c3
+5. Ng4 d4
+6. exd4 cxd4
+7. Bxd4 Nfxd4
+8. Nxd4 Qxd4
+9. c5 Qxg7
+10. Rf8 Qxg4
+11. d5 Qe2
+12. Qa5+ Nc3
+13. Be6 exd5
+14. O-O-O Bd2
+15. Bf5 Ne4
+16. Rfe8 Bxa5
+17. b6 Nd6+
+18. Rxd6 Qxe8+
+19. Kc7 Qe7+
+20. Kc8 Qxd6
+21. bxa5 Qxc5+
+
+PGN:
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Nb5 Bc5 5. c3 Ng4 6. d4 exd4 7. cxd4 Bxd4 8. Nfxd4 Nxd4 9. Qxd4 c5 10. Qxg7 Rf8 11. Qxg4 d5 12. Qe2 Qa5+ 13. Nc3 Be6 14. exd5 O-O-O 15. Bd2 Bf5 16. Ne4 Rfe8 17. Bxa5 b6 18. Nd6+ Rxd6 19. Qxe8+ Kc7 20. Qe7+ Kc8 21. Qxd6 bxa5 22. Qxc5+

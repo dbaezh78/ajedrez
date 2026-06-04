@@ -9,26 +9,16 @@
 </head>
 <body>
     <div id="game-container"> 
-        
-        <div id="board-wrapper">
-            <div id="chessboard">
-                <!-- El tablero se genera con JavaScript -->
-            </div>
-            
-            <div id="ranks">
-                <!-- Las coordenadas numéricas se generan con JavaScript -->
-            </div>
-            
-            <div id="files">
-                <!-- Las coordenadas de letras se generan con JavaScript -->
-            </div>
+        <div id=\"board-wrapper\">
+            <div id="chessboard"></div>
+            <div id="ranks"></div>
+            <div id="files"></div>
         </div>
         
         <div id="info-panel">
             <h1>Juego de Ajedrez</h1>
     
             <div id="start-block">
-                
                 <div id="button-container">
                     <button id="undo-button" disabled>↶ Volver</button>
                     <button id="start-button">
@@ -47,24 +37,20 @@
                         <button id="black-button" disabled>Pausar Negras</button>
                     </div>
                 </div>
-                
             </div>
             
             <hr>
-            
             <h2 id="turn-display">Turno: Blancas</h2>
-            
             <hr>
 
             <h2>Registro Jugadas📜</h2>
             <div id="moves-list">
-                <!-- Las jugadas se mostrarán aquí -->
-                 <button onclick="window.location.href='../index.html'">Volver al Menú</button>
+                <div class="moves-scroll"></div>
+                <button onclick="window.location.href='../index.html'">Volver al Menú</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para coronación de peón -->
     <div id="promotion-modal" class="modal">
         <div class="modal-content">
             <h3>Coronar Peón</h3>

@@ -6,8 +6,7 @@
     <title>Ajedrez Pro - David</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet"  href="style.css">
-
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -32,19 +31,38 @@
 
         <div class="controls">
             <div class="btn-group">
-                <button onclick="undoMove()">⟵ Atrás</button>
-                <button onclick="redoMove()">Adelante ⟶</button>
-                
-                
+                <button onclick="undoMove()">← <br>Atrás</button>
+                <button onclick="redoMove()">Adelante<br> →</button>                
             </div>
 
             <div class="color-selector">
-    <label class="switch">
-        <input type="checkbox" id="colorToggle" onchange="toggleOrientation()">
-        <span class="slider"></span>
-    </label>
-    <span id="colorLabel">Jugando con las: <b>Blancas</b></span>
-</div>
+                <label class="switch">
+                    <input type="checkbox" id="colorToggle" onchange="toggleOrientation()">
+                    <span class="slider"></span>
+                </label>
+                <span id="colorLabel">Jugando con: <b>Blancas</b></span>
+            </div>
+
+            <div class="load-container">
+                <label for="loadFile" class="load-label">📂 Cargar Partida Guardada</label>
+                <input type="file" id="loadFile" accept=".txt" onchange="loadSavedGame(event)">
+            </div>
+
+            <div class="folder-list-container">
+                <div class="source-selector">
+                    <label class="radio-label">
+                        <input type="radio" name="sourceOrigin" value="local" checked onchange="handleSourceChange()"> 💻 Local
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="sourceOrigin" value="web" onchange="handleSourceChange()"> 🌐 Web
+                    </label>
+                </div>
+
+                <button id="actionSourceBtn" onclick="selectNotesFolder()" class="folder-btn">📁 Seleccionar Carpeta Misapuntes</button>
+                
+                <div class="listbox-title" id="listboxTitleDisplay">Partidas en la carpeta:</div>
+                <select id="gamesListBox" size="4" class="games-listbox" onchange="loadSelectedGameFromList()"></select>
+            </div>
 
             <textarea id="notes" placeholder="Tus apuntes..."></textarea>
             
@@ -57,6 +75,6 @@
         </div>
     </div>
 
-        <script src="apuntes.js"></script>
+    <script src="apuntes.js"></script>
 </body>
 </html>

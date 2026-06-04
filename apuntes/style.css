@@ -1,187 +1,772 @@
-/*
-body { 
-  font-family: sans-serif; 
-  display: flex; 
-  justify-content: center; 
-  padding: 20px; }
-*/
-
-  body { 
-    font-family: sans-serif; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    background: #f4f4f4; 
-    padding: 20px;
-    margin-left: 35px;
-  }
-
-.game-container { 
-  display: flex; 
-  gap: 10px;
-  padding: 5px;
+/* ======================================= */
+/* ESTILOS BASE (Móvil Primero, 384px) */
+/* ======================================= */
+* {
+    box-sizing: border-box;
 }
 
-.container { display: flex; gap: 20px; align-items: flex-start; }
-.controls { display: flex; flex-direction: column; gap: 10px; }
-#notes { width: 278px; height: 300px; padding: 10px; }
-button { padding: 10px; cursor: pointer; background: #007bff; color: white; border: none; }
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 10px;
+    min-height: 100vh;
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+@media (min-width: 384px) {
+    body { margin: 0; }
+}
+@media (min-width: 768px) {
+    body { margin: 1% 0 0 5%; }
+}
+
+/* Contenedor principal del juego */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Contenedor para el tablero y las coordenadas */
+#board-wrapper {
+    position: relative;
+    margin: 15px auto;
+    width: fit-content;
+}
+
+/* El Tablero de Ajedrez */
+#chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 360px;
+    height: 360px;
+    border: 4px solid #333;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Casillas */
+.square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Colores de Casillas estilo Chess.com */
+.light { background-color: #f0d9b5; }
+.dark { background-color: #b58863; }
+
+/* Selección y movimientos */
+.selected { background-color: #7bf17b !important; }
+.last-move { background-color: rgba(241, 196, 15, 0.6) !important; }
+
+/* Coordenadas */
+#ranks {
+    position: absolute;
+    top: 0;
+    left: -25px;
+    display: flex;
+    flex-direction: column;
+    height: 360px;
+    justify-content: space-around;
+}
+
+#files {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    display: flex;
+    width: 360px;
+    justify-content: space-around;
+}
+
+.rank-label, .file-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Panel lateral/inferior de información */
+#info-panel {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#info-panel h1 {
+    margin: 0;
+    font-size: 22px;
+    text-align: center;
+    color: #2c3e50;
+}
+
+#start-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#button-container {
+    display: flex;
+    gap: 10px;
+}
+
+#start-button {
+    flex-grow: 2;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#start-button h2 { margin: 5px 0; font-size: 18px; }
+#start-button:hover { background-color: #219653; }
+
+#undo-button {
+    flex-grow: 1;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#undo-button:hover:not(:disabled) { background-color: #c0392b; }
+#undo-button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+/* Contenedores de Tiempo */
+#timer-container {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.player-control {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    border-radius: 6px;
+    border: 2px solid #ccc;
+}
+
+.player-control.white { background-color: #f9f9f9; }
+.player-control.black { background-color: #34495e; color: white; }
+
+.timer-display {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: monospace;
+    margin-bottom: 5px;
+}
+
+.player-control button {
+    width: 100%;
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.player-control.white button { background-color: #e0e0e0; color: #333; }
+.player-control.black button { background-color: #2c3e50; color: white; }
+.player-control button:disabled { background-color: #bdc3c7 !important; color: #7f8c8d !important; cursor: not-allowed; }
+
+#turn-display { margin: 5px 0; font-size: 18px; text-align: center; color: #2980b9; }
+hr { border: 0; height: 1px; background: #eee; margin: 2px 0; }
+
+/* Lista de movimientos organizada */
+#moves-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.moves-scroll {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    height: 120px;
+    overflow-y: auto;
+    background-color: #fafafa;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#moves-list button {
+    background-color: #7f8c8d;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    width: 100%;
+}
+#moves-list button:hover { background-color: #6c7a7d; }
+
+/* El Modal de Coronación */
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 100;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 90%;
+    width: 300px;
+}
+
+.promotion-options { display: flex; justify-content: space-around; margin-top: 15px; gap: 5px; }
+.promotion-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 5px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    flex: 1;
+}
+.promotion-option:hover { background-color: #e0e0e0; }
+
+/* ======================================= */
+/* MEDIA QUERIES PARA PANTALLAS GRANDES */
+/* ======================================= */
+@media (min-width: 768px) {
+    #game-container {
+        flex-direction: row;
+        max-width: 900px;
+        align-items: flex-start;
+        gap: 30px;
+    }
+    
+    #chessboard { width: 440px; height: 440px; }
+    #ranks { height: 440px; }
+    #files { width: 440px; }
+    #info-panel { width: 360px; min-height: 440px; }
+    .moves-scroll { height: 160px; }
+}
+
+.square:hover { filter: brightness(1.05); }
+
+
+/* =============================================================================
+   ESTILOS ESPECÍFICOS PARA EL MÓDULO DE APUNTES (REPARACIÓN DE APUNTES.JS)
+   ============================================================================= */
+
+/* Contenedor wrapper para apuntes */
+.board-wrapper {
+    display: grid;
+    grid-template-columns: auto 800px;
+    grid-template-rows: 800px auto;
+    width: fit-content;
+    position: relative;
+    background-color: #333;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* Tablero de análisis de apuntes (Fijo a 800px para cálculo exacto de flechas) */
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 800px;
+    height: 800px;
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+/* Casillas específicas de apuntes */
+#board .square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Mapeo de colores Neo de Chess.com para apuntes */
+#board .square.white { background-color: #f0d9b5 !important; }
+#board .square.black { background-color: #b58863 !important; }
+
+/* Selección y marcas en apuntes */
+#board .square.selected { background-color: #7bf17b !important; }
+#board .square.last-move { background-color: rgba(241, 196, 15, 0.6) !important; }
+
+/* Coordenadas laterales e inferiores en apuntes */
+.ranks {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-right: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.files {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    justify-content: space-around;
+    padding-top: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Ajustes para el panel de controles de apuntes */
+.game-container {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 20px auto;
+    align-items: flex-start;
+}
+
+.controls {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#notes {
+    width: 100%;
+    height: 250px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 15px;
+    resize: none;
+}
+
+#finishBtn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    width: 100%;
+    transition: background 0.2s;
+}
+#finishBtn:hover { background-color: #219653; }
 
 .color-selector {
-    margin-bottom: 15px;
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 15px;
 }
 
-/* El switch - el contenedor */
+
+/* =============================================================================
+   ESTILOS ESPECÍFICOS PARA EL MÓDULO DE APUNTES (REPARACIÓN DE APUNTES.JS)
+   ============================================================================= */
+
+/* Contenedor wrapper para apuntes */
+.board-wrapper {
+    display: grid;
+    grid-template-columns: auto 800px;
+    grid-template-rows: 800px auto;
+    width: fit-content;
+    position: relative;
+    background-color: #333;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* Tablero de análisis de apuntes (Fijo a 800px para cálculo exacto de flechas) */
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 800px;
+    height: 800px;
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+/* Casillas específicas de apuntes */
+#board .square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Mapeo de colores Neo de Chess.com para apuntes */
+#board .square.white { background-color: #f0d9b5 !important; }
+#board .square.black { background-color: #b58863 !important; }
+
+/* Selección y marcas en apuntes */
+#board .square.selected { background-color: #7bf17b !important; }
+#board .square.last-move { background-color: rgba(241, 196, 15, 0.6) !important; }
+
+/* Coordenadas laterales e inferiores en apuntes */
+.ranks {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-right: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.files {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    justify-content: space-around;
+    padding-top: 10px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Ajustes para el panel de controles de apuntes */
+.game-container {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 20px auto;
+    align-items: flex-start;
+}
+
+.controls {
+    background-color: transparent; /* Fondo transparente para que resalte la barra blanca */
+    padding: 0;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* -----------------------------------------------------------------------------
+   REPARACIÓN CORREGIDA DE LOS BOTONES Y SWITCH SEGÚN IMAGE_2AA43B.PNG
+   ----------------------------------------------------------------------------- */
+
+/* Contenedor de botones Atrás / Adelante */
+.btn-group {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 20px;
+}
+
+/* Botones Azules de Navegación */
+.btn-group button {
+    width: 90px;
+    height: 90px;
+    background-color: #007cef; /* Azul idéntico a la imagen */
+    color: white !important;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    line-height: 1.2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: background 0.2s;
+}
+
+.btn-group button:hover {
+    background-color: #006bcf;
+}
+
+/* Barra Blanca Flotante Redondeada para el Selector de Color */
+.color-selector {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 18px;
+    background-color: #ffffff;
+    padding: 15px 20px;
+    border-radius: 12px; /* Redondeado suave de la barra */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 100%;
+}
+
+/* El interruptor (Switch Slider) */
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
+    position: relative;
+    display: inline-block;
+    width: 55px;
+    height: 28px;
+    flex-shrink: 0;
 }
 
-/* Ocultar el checkbox original */
-.switch input { opacity: 0; width: 0; height: 0; }
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
-/* El slider */
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 34px;
 }
 
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 16px; width: 16px;
-  left: 4px; bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
+    position: absolute;
+    content: "";
+    height: 22px; width: 22px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
 }
 
-input:checked + .slider { background-color: #333; }
-input:checked + .slider:before { transform: translateX(26px); }
+input:checked + .slider {
+    background-color: #007cef; /* Cambia al azul al activarse */
+}
 
+input:checked + .slider:before {
+    transform: translateX(27px);
+}
 
-        body { 
-          font-family: sans-serif; 
-          display: flex; 
-          flex-direction: column; 
-          align-items: center; 
-          background: #f4f4f4; 
-          padding: 0px; } /*20px*/
+/* Textarea y Botones Inferiores de Apuntes */
+#notes {
+    width: 100%;
+    height: 250px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 15px;
+    resize: none;
+    background-color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
 
-        /*.game-container { 
-          display: flex; 
-          gap: 20px;
-          flex-flow: column;
-        }*/
+#finishBtn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 14px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    width: 100%;
+    transition: background 0.2s;
+}
+#finishBtn:hover { background-color: #219653; }
 
-        /*
-        
-                .game-container { 
-    display: flex; 
- 
-    flex-direction: column; 
-    align-items: center;
-    gap: 20px; 
+/* =============================================================================
+   ESTILOS COMPLEMENTARIOS PARA EL LISTBOX INTEGRADO DE LA CARPETA LOCAL
+   ============================================================================= */
+.folder-list-container {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+/* Botón de activación de escaneo */
+.folder-btn {
+    background-color: #007cef;
+    color: white !important;
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
     width: 100%;
 }
-        */
 
-/* Cuando la pantalla tiene más de 900px de ancho (Tableta de lado o PC) */
-@media (min-width: 800px) {
-    .game-container { 
-        /* Cambia a: uno al lado del otro */
-        flex-direction: column; 
-        align-items: flex-start;
-        justify-content: center;
-    }
+.folder-btn:hover {
+    background-color: #0066c4;
 }
 
-@media (min-width: 992px) {
-      .game-container { 
-        /* Cambia a: uno al lado del otro */
-        flex-direction: row; 
-        align-items: flex-start;
-        justify-content: center;
-      }
-
+.listbox-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 2px;
 }
 
+/* El ListBox del panel */
+.games-listbox {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #444;
+    background-color: #fafafa;
+    outline: none;
+    cursor: pointer;
+    overflow-y: auto;
+}
 
-        
+/* Filas individuales del ListBox */
+.games-listbox option {
+    padding: 6px 10px;
+    border-radius: 4px;
+}
 
-          .board-wrapper { 
-            display: grid; 
-            grid-template-columns: 30px 800px; 
-            grid-template-rows: 800px 30px; 
-          }
+.games-listbox option:hover {
+    background-color: #f0f4f8;
+}
 
-        #board { 
-          display: grid; 
-          grid-template-columns: repeat(8, 98.7px); 
-          grid-template-rows: repeat(8, 98.7px); 
-          border: 5px solid #333; 
-          position: relative; 
-      }
+.games-listbox option:checked {
+    background-color: #007cef !important;
+    color: white !important;
+}
 
+/* =============================================================================
+   ESTILOS COMPLEMENTARIOS PARA EL LISTBOX Y BOTONES RADIALES (LOCAL VS WEB)
+   ============================================================================= */
+.folder-list-container {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 5px;
+}
 
-      .square { 
-          width: 100px; 
-          height: 100px; 
-          display: flex; 
-          justify-content: center; 
-          align-items: center; 
-          font-size: 60px; 
-          cursor: pointer; 
-      }
+/* El grupo contenedor de los Option Buttons */
+.source-selector {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f0f2f5;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
 
+.radio-label {
+    font-size: 15px;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
-        .white { background-color: #f0d9b5; }
-        .black { background-color: #b58863; }
+.radio-label input[type="radio"] {
+    transform: scale(1.15);
+    cursor: pointer;
+    accent-color: #007cef; /* Pinta el puntito del botón de azul */
+}
 
-        .ranks { 
-          display: flex; 
-          flex-direction: column; 
-          justify-content: space-around; 
-          align-items: center; 
-          font-weight: bold;
-          font-size: larger;
-          color: #555; }
+.folder-btn {
+    background-color: #007cef;
+    color: white !important;
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+}
 
-        .files { 
-          display: grid; 
-          grid-template-columns: repeat(8, 100px); 
-          justify-items: center; 
-          align-items: center; 
-          font-weight: bold; 
-          font-size: larger; 
-          color: #555; 
-          margin-left: 30px; 
-          margin-top: -29px;
-        }
+.folder-btn:hover { background-color: #0066c4; }
+.listbox-title { font-size: 14px; font-weight: bold; color: #333; margin-top: 2px; }
 
+.games-listbox {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #444;
+    background-color: #fafafa;
+    outline: none;
+    cursor: pointer;
+    overflow-y: auto;
+}
 
-        .selected { background-color: #88cc88 !important; }
-        .last-move { background-color: rgba(255, 255, 0, 0.4) !important; }
-        
-        .controls { width: 300px; display: flex; flex-direction: column; gap: 10px; }
-        textarea { height: 200px; padding: 10px; }
-        .btn-group {
-             display: flex; 
-             gap: 5px; 
-             justify-content: space-between; 
-            }
-        button { padding: 10px; cursor: pointer; flex: 0; border: none; font-weight: bold; }
-        #finishBtn { background-color: #e67e22; color: white; font-size: 16px; }
+.games-listbox option { padding: 6px 10px; border-radius: 4px; }
+.games-listbox option:hover { background-color: #f0f4f8; }
+.games-listbox option:checked { background-color: #007cef !important; color: white !important; }
