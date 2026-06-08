@@ -1,5 +1,4 @@
 let game = new Chess();
-let moveImages = []; // Se mantiene vacío para evitar alterar firmas de inicio si es necesario
 let lastMove = { from: null, to: null };
 let selectedSquare = null;
 let playerName = "";
@@ -45,11 +44,6 @@ window.onload = async () => {
     // Inicialización automática por defecto del modo Local persistente
     handleSourceChange();
 };
-
-// Se remueve la lógica interna pesada de html2canvas ya que no procesaremos imágenes
-async function captureBoardState() {
-    return null;
-}
 
 function renderBoard() {
     const boardElement = document.getElementById('board');
@@ -148,6 +142,7 @@ function getSquareCoords(coord) {
     return { x, y };
 }
 
+// --- SECTOR DE CONTROL DE ORIGEN DINÁMICO (LOCAL VS WEB) ---
 async function handleSourceChange() {
     const selectedSource = document.querySelector('input[name="sourceOrigin"]:checked').value;
     const actionBtn = document.getElementById('actionSourceBtn');
@@ -331,38 +326,34 @@ function redoMove() {
     }
 }
 
-// --- FUNCIÓN DE GUARDADO OPTIMIZADA: SÓLO ARCHIVO .TXT INTERACTIVO ---
-async function finishGame() {
-    if (!window.showDirectoryPicker) { alert("Usa Chrome/Edge para guardar."); return; }
+// --- GUARDADO EXCLUSIVO: Solo descarga el archivo .txt individual en donde tú elijas ---
+function finishGame() {
     try {
-        const handle = await window.showDirectoryPicker();
-        const counter = localStorage.getItem('chessCounter');
-        const folderName = `${playerName}_${counter}`;
-        const subFolder = await handle.getDirectoryHandle(folderName, { create: true });
-
-        // Guardamos única y exclusivamente el archivo .txt estructurado
-        const txtFile = await subFolder.getFileHandle(`${folderName}.txt`, { create: true });
-        const writableTxt = await txtFile.createWritable();
+        const notesValue = document.getElementById('notes').value;
+        const pgnValue = game.pgn();
         
         const interactivePack = {
             player: playerName,
-            notes: document.getElementById('notes').value,
-            pgn: game.pgn(),
+            notes: notesValue,
+            pgn: pgnValue,
             historyFEN: moveHistoryFEN,
             historyMoves: lastMoveHistory
         };
         
-        await writableTxt.write(JSON.stringify(interactivePack, null, 2));
-        await writableTxt.close();
+        const blob = new Blob([JSON.stringify(interactivePack, null, 2)], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        
+        const counter = localStorage.getItem('chessCounter') || "1";
+        link.download = `${playerName}_Partida_${counter}.txt`;
+        
+        link.click();
+        URL.revokeObjectURL(link.href);
 
         localStorage.setItem('chessCounter', parseInt(counter) + 1);
-        alert("¡Tus apuntes se han guardado exitosamente en la carpeta!: " + folderName);
-        
-        // Refrescamos automáticamente la lista local para ver el nuevo archivo indexado de inmediato
-        await handleSourceChange();
-    } catch (err) { 
-        console.error("Error durante el guardado:", err); 
-        alert("El guardado fue cancelado.");
+        alert("¡Guardando apuntes! Selecciona la carpeta donde quieres almacenar el archivo .txt");
+    } catch (err) {
+        console.error("Error al exportar el archivo de apuntes:", err);
     }
 }
 
