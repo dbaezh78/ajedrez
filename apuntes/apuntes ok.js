@@ -1,5 +1,5 @@
 let game = new Chess();
-let moveImages = []; // Se mantiene vacío para evitar alterar firmas de inicio si es necesario
+let moveImages = []; 
 let lastMove = { from: null, to: null };
 let selectedSquare = null;
 let playerName = "";
@@ -41,14 +41,21 @@ window.onload = async () => {
     currentPointer = 0;
     
     renderBoard();
+    moveImages.push(await captureBoardState());
 
     // Inicialización automática por defecto del modo Local persistente
     handleSourceChange();
 };
 
-// Se remueve la lógica interna pesada de html2canvas ya que no procesaremos imágenes
 async function captureBoardState() {
-    return null;
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const canvas = await html2canvas(document.querySelector('.board-wrapper'), {
+        logging: false,
+        backgroundColor: null,
+        useCORS: true,
+        allowTaint: true
+    });
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
 function renderBoard() {
@@ -110,6 +117,7 @@ async function handleSquareClick(square) {
             }
             
             renderBoard();
+            moveImages.push(await captureBoardState());
             
             moveHistoryFEN.push(game.fen());
             lastMoveHistory.push({ from: move.from, to: move.to });
@@ -148,13 +156,14 @@ function getSquareCoords(coord) {
     return { x, y };
 }
 
+// --- SECTOR DE CONTROL DE ORIGEN DINÁMICO (LOCAL VS WEB) ---
 async function handleSourceChange() {
     const selectedSource = document.querySelector('input[name="sourceOrigin"]:checked').value;
     const actionBtn = document.getElementById('actionSourceBtn');
     const listBoxTitle = document.getElementById('listboxTitleDisplay');
     const listBox = document.getElementById('gamesListBox');
     
-    listBox.innerHTML = ""; 
+    listBox.innerHTML = ""; // Limpiamos la lista al cambiar de pestaña
 
     if (selectedSource === 'local') {
         actionBtn.style.display = 'block';
@@ -162,6 +171,7 @@ async function handleSourceChange() {
         actionBtn.onclick = selectNotesFolder;
         listBoxTitle.textContent = "Partidas Locales:";
         
+        // Intentar recuperar el directorio automático guardado en IndexedDB
         try {
             const storedHandle = await getStoredDirectoryHandle();
             if (storedHandle) {
@@ -172,6 +182,7 @@ async function handleSourceChange() {
         } catch (err) { console.error(err); }
         
     } else {
+        // MODO WEB ACTIVO
         actionBtn.style.display = 'block';
         actionBtn.textContent = '🔄 Sincronizar Listado Web';
         actionBtn.onclick = loadWebJSONIndex;
@@ -181,12 +192,14 @@ async function handleSourceChange() {
     }
 }
 
+// --- CAPTURA E INYECTADO DESDE EL SCRIPT JSON DE LA WEB ---
 async function loadWebJSONIndex() {
     const listBox = document.getElementById('gamesListBox');
     listBox.innerHTML = "";
     webFilesList = [];
 
     try {
+        // Apunta al archivo JSON generado dinámicamente en tu estructura de carpetas
         const response = await fetch('../Misapuntes/partidas.json');
         if (!response.ok) throw new Error("No se pudo leer el archivo de índice web.");
         
@@ -195,8 +208,9 @@ async function loadWebJSONIndex() {
 
         webFilesList.forEach((partida, index) => {
             const option = document.createElement('option');
+            // Si la partida tiene subcategoría o especificación la acoplamos al rótulo de la lista
             const labelSub = partida.sub ? ` (${partida.sub})` : "";
-            option.value = index; 
+            option.value = index; // Guardamos el índice numérico para buscarlo al hacer clic
             option.textContent = `${partida.nombre}${labelSub}`;
             listBox.appendChild(option);
         });
@@ -206,6 +220,7 @@ async function loadWebJSONIndex() {
     }
 }
 
+// --- GESTIÓN DE SELECCIÓN INTEGRADA DEL LISTBOX ---
 async function loadSelectedGameFromList() {
     const selectedSource = document.querySelector('input[name="sourceOrigin"]:checked').value;
     const listBox = document.getElementById('gamesListBox');
@@ -214,6 +229,7 @@ async function loadSelectedGameFromList() {
     if (selectedValue === "") return;
 
     if (selectedSource === 'local') {
+        // Carga Local Tradicional
         if (!indexedFiles[selectedValue]) return;
         try {
             const fileHandle = indexedFiles[selectedValue];
@@ -222,11 +238,13 @@ async function loadSelectedGameFromList() {
             parseAndLoadTextGame(fileText);
         } catch (err) { console.error(err); }
     } else {
+        // Carga Web vía Fetch asíncrono
         const index = parseInt(selectedValue);
         const partidaInfo = webFilesList[index];
         if (!partidaInfo) return;
 
         try {
+            // Buscamos el archivo .txt correspondiente usando el nombre del JSON
             const response = await fetch(`../Misapuntes/${partidaInfo.nombre}.txt`);
             if (!response.ok) throw new Error("No se pudo descargar el archivo de apuntes.");
             const fileText = await response.text();
@@ -238,6 +256,7 @@ async function loadSelectedGameFromList() {
     }
 }
 
+// --- FUNCIONES INTERNAS DE CARGA DE FICHEROS Y NAVEGACIÓN ---
 async function selectNotesFolder() {
     try {
         const directoryHandle = await window.showDirectoryPicker();
@@ -298,7 +317,7 @@ function undoMove() {
     if (moveHistoryFEN.length > 1 && currentPointer === moveHistoryFEN.length - 1) {
         const move = game.undo();
         if(move) {
-            moveHistoryFEN.pop(); lastMoveHistory.pop();
+            moveImages.pop(); moveHistoryFEN.pop(); lastMoveHistory.pop();
             const notes = document.getElementById('notes');
             const history = game.history();
             if (move.color === 'w') {
@@ -331,7 +350,6 @@ function redoMove() {
     }
 }
 
-// --- FUNCIÓN DE GUARDADO OPTIMIZADA: SÓLO ARCHIVO .TXT INTERACTIVO ---
 async function finishGame() {
     if (!window.showDirectoryPicker) { alert("Usa Chrome/Edge para guardar."); return; }
     try {
@@ -340,7 +358,6 @@ async function finishGame() {
         const folderName = `${playerName}_${counter}`;
         const subFolder = await handle.getDirectoryHandle(folderName, { create: true });
 
-        // Guardamos única y exclusivamente el archivo .txt estructurado
         const txtFile = await subFolder.getFileHandle(`${folderName}.txt`, { create: true });
         const writableTxt = await txtFile.createWritable();
         
@@ -351,29 +368,18 @@ async function finishGame() {
             historyFEN: moveHistoryFEN,
             historyMoves: lastMoveHistory
         };
-        
         await writableTxt.write(JSON.stringify(interactivePack, null, 2));
         await writableTxt.close();
 
+        for (let i = 0; i < moveImages.length; i++) {
+            const imgFile = await subFolder.getFileHandle(`movimiento_${i}.png`, { create: true });
+            const writableImg = await imgFile.createWritable();
+            await writableImg.write(moveImages[i]);
+            await writableImg.close();
+        }
         localStorage.setItem('chessCounter', parseInt(counter) + 1);
-        alert("¡Tus apuntes se han guardado exitosamente en la carpeta!: " + folderName);
-        
-        // Refrescamos automáticamente la lista local para ver el nuevo archivo indexado de inmediato
-        await handleSourceChange();
-    } catch (err) { 
-        console.error("Error durante el guardado:", err); 
-        alert("El guardado fue cancelado.");
-    }
-}
-
-function loadSavedGame(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        parseAndLoadTextGame(e.target.result);
-    };
-    reader.readAsText(file);
+        alert("Guardado exitoso en: " + folderName);
+    } catch (err) { console.error(err); }
 }
 
 function drawArrow() {
