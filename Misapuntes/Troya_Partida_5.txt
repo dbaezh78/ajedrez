@@ -1,0 +1,139 @@
+{
+  "player": "Troya",
+  "notes": "1. d4 d5\n2. e4 dxe4\n3. Nc3 Nf6\n4. f3 exf3\n5. Qxf3 Qxd4\n6. Be3 Qb4\n7. O-O-O Bg4\n8. Nb5 Na6\n9. Qxb7 Bxd1\n10. Qxa8+ Kd7\n11. Qxa7 Nc5\n12. Qxc7+ Ke8\n13. Qc8#",
+  "pgn": "1. d4 d5 2. e4 dxe4 3. Nc3 Nf6 4. f3 exf3 5. Qxf3 Qxd4 6. Be3 Qb4 7. O-O-O Bg4 8. Nb5 Na6 9. Qxb7 Bxd1 10. Qxa8+ Kd7 11. Qxa7 Nc5 12. Qxc7+ Ke8 13. Qc8#",
+  "historyFEN": [
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
+    "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2",
+    "rnbqkbnr/ppp1pppp/8/3p4/3PP3/8/PPP2PPP/RNBQKBNR b KQkq e3 0 2",
+    "rnbqkbnr/ppp1pppp/8/8/3Pp3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+    "rnbqkbnr/ppp1pppp/8/8/3Pp3/2N5/PPP2PPP/R1BQKBNR b KQkq - 1 3",
+    "rnbqkb1r/ppp1pppp/5n2/8/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+    "rnbqkb1r/ppp1pppp/5n2/8/3Pp3/2N2P2/PPP3PP/R1BQKBNR b KQkq - 0 4",
+    "rnbqkb1r/ppp1pppp/5n2/8/3P4/2N2p2/PPP3PP/R1BQKBNR w KQkq - 0 5",
+    "rnbqkb1r/ppp1pppp/5n2/8/3P4/2N2Q2/PPP3PP/R1B1KBNR b KQkq - 0 5",
+    "rnb1kb1r/ppp1pppp/5n2/8/3q4/2N2Q2/PPP3PP/R1B1KBNR w KQkq - 0 6",
+    "rnb1kb1r/ppp1pppp/5n2/8/3q4/2N1BQ2/PPP3PP/R3KBNR b KQkq - 1 6",
+    "rnb1kb1r/ppp1pppp/5n2/8/1q6/2N1BQ2/PPP3PP/R3KBNR w KQkq - 2 7",
+    "rnb1kb1r/ppp1pppp/5n2/8/1q6/2N1BQ2/PPP3PP/2KR1BNR b kq - 3 7",
+    "rn2kb1r/ppp1pppp/5n2/8/1q4b1/2N1BQ2/PPP3PP/2KR1BNR w kq - 4 8",
+    "rn2kb1r/ppp1pppp/5n2/1N6/1q4b1/4BQ2/PPP3PP/2KR1BNR b kq - 5 8",
+    "r3kb1r/ppp1pppp/n4n2/1N6/1q4b1/4BQ2/PPP3PP/2KR1BNR w kq - 6 9",
+    "r3kb1r/pQp1pppp/n4n2/1N6/1q4b1/4B3/PPP3PP/2KR1BNR b kq - 0 9",
+    "r3kb1r/pQp1pppp/n4n2/1N6/1q6/4B3/PPP3PP/2Kb1BNR w kq - 0 10",
+    "Q3kb1r/p1p1pppp/n4n2/1N6/1q6/4B3/PPP3PP/2Kb1BNR b k - 0 10",
+    "Q4b1r/p1pkpppp/n4n2/1N6/1q6/4B3/PPP3PP/2Kb1BNR w - - 1 11",
+    "5b1r/Q1pkpppp/n4n2/1N6/1q6/4B3/PPP3PP/2Kb1BNR b - - 0 11",
+    "5b1r/Q1pkpppp/5n2/1Nn5/1q6/4B3/PPP3PP/2Kb1BNR w - - 1 12",
+    "5b1r/2Qkpppp/5n2/1Nn5/1q6/4B3/PPP3PP/2Kb1BNR b - - 0 12",
+    "4kb1r/2Q1pppp/5n2/1Nn5/1q6/4B3/PPP3PP/2Kb1BNR w - - 1 13",
+    "2Q1kb1r/4pppp/5n2/1Nn5/1q6/4B3/PPP3PP/2Kb1BNR b - - 2 13"
+  ],
+  "historyMoves": [
+    {
+      "from": null,
+      "to": null
+    },
+    {
+      "from": "d2",
+      "to": "d4"
+    },
+    {
+      "from": "d7",
+      "to": "d5"
+    },
+    {
+      "from": "e2",
+      "to": "e4"
+    },
+    {
+      "from": "d5",
+      "to": "e4"
+    },
+    {
+      "from": "b1",
+      "to": "c3"
+    },
+    {
+      "from": "g8",
+      "to": "f6"
+    },
+    {
+      "from": "f2",
+      "to": "f3"
+    },
+    {
+      "from": "e4",
+      "to": "f3"
+    },
+    {
+      "from": "d1",
+      "to": "f3"
+    },
+    {
+      "from": "d8",
+      "to": "d4"
+    },
+    {
+      "from": "c1",
+      "to": "e3"
+    },
+    {
+      "from": "d4",
+      "to": "b4"
+    },
+    {
+      "from": "e1",
+      "to": "c1"
+    },
+    {
+      "from": "c8",
+      "to": "g4"
+    },
+    {
+      "from": "c3",
+      "to": "b5"
+    },
+    {
+      "from": "b8",
+      "to": "a6"
+    },
+    {
+      "from": "f3",
+      "to": "b7"
+    },
+    {
+      "from": "g4",
+      "to": "d1"
+    },
+    {
+      "from": "b7",
+      "to": "a8"
+    },
+    {
+      "from": "e8",
+      "to": "d7"
+    },
+    {
+      "from": "a8",
+      "to": "a7"
+    },
+    {
+      "from": "a6",
+      "to": "c5"
+    },
+    {
+      "from": "a7",
+      "to": "c7"
+    },
+    {
+      "from": "d7",
+      "to": "e8"
+    },
+    {
+      "from": "c7",
+      "to": "c8"
+    }
+  ]
+}
